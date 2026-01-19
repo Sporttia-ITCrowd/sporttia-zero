@@ -1,0 +1,197 @@
+import { useState } from 'react';
+import { useChat } from '../../hooks/useChat';
+import { MessageList } from './MessageList';
+import { MessageInput } from './MessageInput';
+import { InfoSidebar } from './InfoSidebar';
+import { cn } from '../../lib/utils';
+
+export function ChatContainer() {
+  const { messages, status, error, sendMessage, clearError, resetConversation } = useChat();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const isLoading = status === 'loading';
+  const isSending = status === 'sending';
+  const isInitializing = isLoading && messages.length === 0;
+
+  return (
+    <div className="flex min-h-screen decorative-bg">
+      {/* Main content wrapper */}
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
+        <div className="flex gap-6 w-full max-w-6xl items-start">
+          {/* Chat Panel */}
+          <div className="flex-1 flex flex-col chat-panel max-w-2xl h-[calc(100vh-4rem)] lg:h-[calc(100vh-8rem)]">
+            {/* Green Header */}
+            <header className="bg-primary px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <LightningBoltIcon className="w-6 h-6 text-primary-foreground" />
+                <h1 className="text-lg font-semibold text-primary-foreground">
+                  Sporttia ZERO
+                </h1>
+              </div>
+              <div className="flex items-center gap-3">
+                <StatusIndicator status={status} />
+                <button
+                  onClick={() => setShowResetConfirm(true)}
+                  disabled={isInitializing}
+                  className="p-1.5 rounded-md text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="New conversation"
+                >
+                  <RefreshIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </header>
+
+            {/* Reset Confirmation Dialog */}
+            {showResetConfirm && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Start new conversation?
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    This will clear the current conversation and start fresh. This action cannot be undone.
+                  </p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setShowResetConfirm(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowResetConfirm(false);
+                        resetConversation();
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
+                    >
+                      Start new
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error banner */}
+            {error && (
+              <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-destructive">{error}</p>
+                  <button
+                    onClick={clearError}
+                    className="text-destructive hover:text-destructive/80 text-sm font-medium"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Messages area */}
+            {isInitializing ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <LoadingSpinner />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Initializing conversation...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <MessageList messages={messages} isLoading={isSending} />
+            )}
+
+            {/* Input area */}
+            <MessageInput
+              onSend={sendMessage}
+              disabled={isInitializing || isSending}
+              placeholder={
+                isInitializing
+                  ? 'Initializing...'
+                  : isSending
+                    ? 'Sending...'
+                    : 'Type your message...'
+              }
+            />
+          </div>
+
+          {/* Info Sidebar - hidden on mobile */}
+          <InfoSidebar />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusIndicator({ status }: { status: string }) {
+  const getStatusConfig = () => {
+    switch (status) {
+      case 'loading':
+        return { color: 'bg-yellow-300', label: 'Loading' };
+      case 'sending':
+        return { color: 'bg-blue-300', label: 'Sending' };
+      case 'error':
+        return { color: 'bg-red-400', label: 'Error' };
+      default:
+        return { color: 'bg-white', label: 'Connected' };
+    }
+  };
+
+  const { color, label } = getStatusConfig();
+
+  return (
+    <div className="flex items-center gap-2 text-xs text-primary-foreground/80">
+      <span
+        className={cn(
+          'h-2 w-2 rounded-full',
+          color,
+          status === 'sending' && 'animate-pulse'
+        )}
+      />
+      <span className="hidden sm:inline">{label}</span>
+    </div>
+  );
+}
+
+function LoadingSpinner() {
+  return (
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  );
+}
+
+function LightningBoltIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+    >
+      <path
+        fillRule="evenodd"
+        d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function RefreshIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+      <path d="M8 16H3v5" />
+    </svg>
+  );
+}

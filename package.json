@@ -1,0 +1,44 @@
+{
+  "name": "sporttia-zero",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered conversational assistant for onboarding sports centers onto Sporttia",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web,admin -c blue,green,yellow \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:admin\"",
+    "dev:api": "npm run dev -w @sporttia-zero/api",
+    "dev:web": "npm run dev -w @sporttia-zero/web",
+    "dev:admin": "npm run dev -w @sporttia-zero/admin",
+    "build": "npm run build --workspaces --if-present",
+    "build:api": "npm run build -w @sporttia-zero/api",
+    "build:web": "npm run build -w @sporttia-zero/web",
+    "build:admin": "npm run build -w @sporttia-zero/admin",
+    "start": "npm run start -w @sporttia-zero/api",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/dist packages/*/dist"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Sporttia ZERO Color Palette */
+    --background: 200 50% 96%; /* Light blue-gray #E8F4FC */
+    --foreground: 220 26% 14%; /* Dark gray #1A202C */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 220 26% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 26% 14%;
+    --primary: 80 61% 50%; /* Sporttia Lime Green #9ACD32 */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
+    --secondary: 220 13% 46%; /* Dark gray #4A5568 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 96%; /* Light gray for message bubbles #F5F5F5 */
+    --muted-foreground: 220 9% 46%;
+    --accent: 80 61% 55%; /* Lighter lime green */
+    --accent-foreground: 220 26% 14%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 0 0% 100%;
+    --ring: 80 61% 50%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior: none;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* Safe area for mobile devices with notches */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+@layer components {
+  /* Decorative background with gradient */
+  .decorative-bg {
+    background: linear-gradient(135deg, #E8F4FC 0%, #F0F7FC 50%, #E8F4FC 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .decorative-bg::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    right: -5%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(154, 205, 50, 0.15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .decorative-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(154, 205, 50, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Chat panel card styling */
+  .chat-panel {
+    @apply bg-card rounded-xl shadow-lg overflow-hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Info card styling */
+  .info-card {
+    @apply bg-card rounded-xl p-5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Lightning bolt icon for assistant messages */
+  .lightning-icon {
+    @apply text-primary;
+    filter: drop-shadow(0 1px 2px rgba(154, 205, 50, 0.3));
+  }
+}

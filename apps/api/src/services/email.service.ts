@@ -1,0 +1,193 @@
+import { getResendClient, isResendConfigured, getEmailFrom, EMAIL_CONFIG } from '../lib/resend';
+import {
+  generateWelcomeEmailHtml,
+  generateWelcomeEmailText,
+  getWelcomeEmailSubject,
+  type WelcomeEmailData,
+  type SupportedLanguage,
+} from '../lib/email-templates';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('email-service');
+
+export interface SendEmailResult {
+  success: boolean;
+  messageId?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface WelcomeEmailParams {
+  sportsCenterName: string;
+  adminName: string;
+  adminEmail: string;
+  adminLogin: string;
+  adminPassword: string;
+  city: string;
+  facilitiesCount: number;
+  facilities: Array<{
+    name: string;
+    sportName: string;
+  }>;
+  sporttiaId: number;
+  language: string;
+}
+
+/**
+ * Normalize language code to supported language
+ */
+function normalizeLanguage(lang: string): SupportedLanguage {
+  const normalized = lang.toLowerCase().substring(0, 2);
+  if (normalized === 'es' || normalized === 'en' || normalized === 'pt') {
+    return normalized;
+  }
+  return 'es'; // Default to Spanish
+}
+
+/**
+ * Send welcome email after sports center creation
+ */
+export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<SendEmailResult> {
+  const { adminEmail, sportsCenterName, sporttiaId } = params;
+
+  logger.info(
+    {
+      to: adminEmail,
+      sportsCenterName,
+      sporttiaId,
+      language: params.language,
+    },
+    'Sending welcome email'
+  );
+
+  // Check if Resend is configured
+  if (!isResendConfigured()) {
+    logger.warn('Resend not configured - skipping welcome email');
+    return {
+      success: false,
+      error: {
+        code: 'NOT_CONFIGURED',
+        message: 'Email service not configured',
+      },
+    };
+  }
+
+  const resend = getResendClient();
+  if (!resend) {
+    logger.error('Failed to get Resend client');
+    return {
+      success: false,
+      error: {
+        code: 'CLIENT_ERROR',
+        message: 'Failed to initialize email client',
+      },
+    };
+  }
+
+  // Prepare email data
+  const language = normalizeLanguage(params.language);
+  const emailData: WelcomeEmailData = {
+    sportsCenterName: params.sportsCenterName,
+    adminName: params.adminName,
+    adminEmail: params.adminEmail,
+    adminLogin: params.adminLogin,
+    adminPassword: params.adminPassword,
+    city: params.city,
+    facilitiesCount: params.facilitiesCount,
+    facilities: params.facilities,
+    sporttiaId: params.sporttiaId,
+    language,
+  };
+
+  const subject = getWelcomeEmailSubject(language);
+  const html = generateWelcomeEmailHtml(emailData);
+  const text = generateWelcomeEmailText(emailData);
+
+  // Attempt to send with retries
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= EMAIL_CONFIG.maxRetries; attempt++) {
+    try {
+      logger.info(
+        { to: adminEmail, attempt, maxRetries: EMAIL_CONFIG.maxRetries },
+        `Email send attempt ${attempt}`
+      );
+
+      const result = await resend.emails.send({
+        from: getEmailFrom(),
+        to: adminEmail,
+        subject,
+        html,
+        text,
+        tags: [
+          { name: 'type', value: 'welcome' },
+          { name: 'sports_center_id', value: String(sporttiaId) },
+          { name: 'language', value: language },
+        ],
+      });
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      logger.info(
+        {
+          to: adminEmail,
+          messageId: result.data?.id,
+          sportsCenterName,
+          sporttiaId,
+        },
+        'Welcome email sent successfully'
+      );
+
+      return {
+        success: true,
+        messageId: result.data?.id,
+      };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      logger.warn(
+        {
+          to: adminEmail,
+          attempt,
+          error: lastError.message,
+        },
+        `Email send attempt ${attempt} failed`
+      );
+
+      // Wait before retrying (except on last attempt)
+      if (attempt < EMAIL_CONFIG.maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, EMAIL_CONFIG.retryDelayMs));
+      }
+    }
+  }
+
+  // All retries failed
+  logger.error(
+    {
+      to: adminEmail,
+      sportsCenterName,
+      sporttiaId,
+      error: lastError?.message,
+    },
+    'Failed to send welcome email after all retries'
+  );
+
+  return {
+    success: false,
+    error: {
+      code: 'SEND_FAILED',
+      message: lastError?.message || 'Failed to send email',
+    },
+  };
+}
+
+/**
+ * Check if email service is available
+ */
+export function isEmailServiceAvailable(): boolean {
+  return isResendConfigured();
+}
