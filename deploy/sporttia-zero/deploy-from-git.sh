@@ -63,8 +63,8 @@ sudo cp "$REPO_DIR/apps/api/package.json" "$API_DIR/"
 # Copy node_modules from monorepo root (where dependencies are hoisted)
 echo "Copying node_modules..."
 sudo rsync -av --delete "$REPO_DIR/node_modules/" "$API_DIR/node_modules/"
-# Also copy shared package
-sudo mkdir -p "$API_DIR/node_modules/@sporttia-zero/shared"
+# Also copy shared package (mkdir -p || true to avoid error if exists)
+sudo mkdir -p "$API_DIR/node_modules/@sporttia-zero/shared" || true
 sudo rsync -av "$REPO_DIR/packages/shared/dist/" "$API_DIR/node_modules/@sporttia-zero/shared/dist/"
 sudo cp "$REPO_DIR/packages/shared/package.json" "$API_DIR/node_modules/@sporttia-zero/shared/"
 sudo chown -R sporttia:sporttia "$API_DIR"
