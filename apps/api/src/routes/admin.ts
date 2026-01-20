@@ -10,7 +10,7 @@ import {
 } from '../repositories/conversation.repository';
 import { db } from '../lib/db';
 import { sql } from 'kysely';
-import type { ConversationStatus } from '../lib/db-types';
+import type { ConversationStatus, CollectedData } from '../lib/db-types';
 
 const router = Router();
 const logger = createLogger('admin-api');
@@ -604,23 +604,26 @@ router.get('/conversations', requireAuth, async (req: AuthenticatedRequest, res:
     }
 
     // Transform conversations for response
-    const conversations = result.conversations.map((c) => ({
-      id: c.id,
-      sessionId: c.session_id,
-      language: c.language,
-      status: c.status,
-      createdAt: c.created_at,
-      updatedAt: c.updated_at,
-      sportsCenter: sportsCentersMap[c.id] || null,
-      collectedData: c.collected_data
-        ? {
-            sportsCenterName: c.collected_data.sportsCenterName,
-            adminEmail: c.collected_data.adminEmail,
-            facilitiesCount: c.collected_data.facilities?.length ?? 0,
-            country: c.collected_data.country,
-          }
-        : null,
-    }));
+    const conversations = result.conversations.map((c) => {
+      const collectedData = c.collected_data as CollectedData | null;
+      return {
+        id: c.id,
+        sessionId: c.session_id,
+        language: c.language,
+        status: c.status,
+        createdAt: c.created_at,
+        updatedAt: c.updated_at,
+        sportsCenter: sportsCentersMap[c.id] || null,
+        collectedData: collectedData
+          ? {
+              sportsCenterName: collectedData.sportsCenterName,
+              adminEmail: collectedData.adminEmail,
+              facilitiesCount: collectedData.facilities?.length ?? 0,
+              country: collectedData.country,
+            }
+          : null,
+      };
+    });
 
     sendSuccess(res, {
       conversations,
