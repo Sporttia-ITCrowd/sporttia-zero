@@ -41,6 +41,9 @@ npm ci
 echo ""
 echo "=== Building applications ==="
 
+echo "Building shared package..."
+npm run build --workspace=packages/shared
+
 echo "Building API..."
 npm run build --workspace=apps/api
 
