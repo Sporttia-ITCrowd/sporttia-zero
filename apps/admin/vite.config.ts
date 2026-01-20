@@ -6,7 +6,7 @@ import packageJson from './package.json';
 export default defineConfig({
   plugins: [react()],
   // Base path for production (served from /manager)
-  base: process.env.VITE_BASE_PATH || '/',
+  base: process.env.NODE_ENV === 'production' ? '/manager/' : '/',
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
