@@ -63,7 +63,7 @@ router.post('/login', async (req, res: Response) => {
     }
 
     // Extract token - Sporttia API returns token inside user object
-    const userData = result.user as Record<string, unknown>;
+    const userData = result.user as unknown as Record<string, unknown>;
     const token = (userData.token || result.token) as string | undefined;
 
     if (!token) {
@@ -617,6 +617,7 @@ router.get('/conversations', requireAuth, async (req: AuthenticatedRequest, res:
             sportsCenterName: c.collected_data.sportsCenterName,
             adminEmail: c.collected_data.adminEmail,
             facilitiesCount: c.collected_data.facilities?.length ?? 0,
+            country: c.collected_data.country,
           }
         : null,
     }));
