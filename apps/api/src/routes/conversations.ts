@@ -280,7 +280,7 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
 
             switch (funcCall.name) {
               case 'collect_sports_center_info': {
-                const data = funcCall.data as { name?: string; city?: string };
+                const data = funcCall.data as { name?: string; city?: string; country?: string };
                 await conversationRepository.updateSportsCenterInfo(conversationId, data);
                 break;
               }

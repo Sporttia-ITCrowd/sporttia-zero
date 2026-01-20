@@ -155,12 +155,13 @@ export const conversationRepository = {
 
   async updateSportsCenterInfo(
     id: string,
-    info: { name?: string; city?: string }
+    info: { name?: string; city?: string; country?: string }
   ): Promise<Conversation | null> {
     return this.updateCollectedData(id, (current) => ({
       ...current,
       ...(info.name && { sportsCenterName: info.name }),
       ...(info.city && { city: info.city }),
+      ...(info.country && { country: info.country.toUpperCase() }), // Normalize to uppercase
     }));
   },
 

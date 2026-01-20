@@ -44,6 +44,7 @@ export interface ConversationSummary {
     sportsCenterName?: string;
     adminEmail?: string;
     facilitiesCount: number;
+    country?: string;
   } | null;
 }
 
