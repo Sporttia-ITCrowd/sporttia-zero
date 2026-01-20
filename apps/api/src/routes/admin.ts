@@ -714,6 +714,7 @@ router.get('/conversations/:id', requireAuth, async (req: AuthenticatedRequest, 
       ? {
           sportsCenterName: conversation.collected_data.sportsCenterName || null,
           city: conversation.collected_data.city || null,
+          country: conversation.collected_data.country || null,
           language: conversation.collected_data.language || null,
           adminName: conversation.collected_data.adminName || null,
           adminEmail: conversation.collected_data.adminEmail || null,

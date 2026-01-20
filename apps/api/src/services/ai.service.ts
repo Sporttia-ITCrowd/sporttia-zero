@@ -22,6 +22,7 @@ export interface DetectedLanguage {
 export interface CollectedSportsCenterInfo {
   name?: string;
   city?: string;
+  country?: string;
 }
 
 // Collected admin info
@@ -218,7 +219,7 @@ export async function generateAIResponse(
             case 'collect_sports_center_info':
               functionCalls.push({
                 name: 'collect_sports_center_info',
-                data: { name: args.name, city: args.city },
+                data: { name: args.name, city: args.city, country: args.country },
               });
               toolResponse.message = 'Sports center info saved';
               toolResponse.data = args;

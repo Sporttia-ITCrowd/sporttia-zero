@@ -56,9 +56,10 @@ npm run build --workspace=apps/admin
 # Deploy API
 echo ""
 echo "=== Deploying API ==="
-sudo mkdir -p "$API_DIR/dist"
-sudo rsync -av --delete "$REPO_DIR/apps/api/dist/" "$API_DIR/dist/"
+sudo mkdir -p "$API_DIR/src"
+sudo rsync -av --delete "$REPO_DIR/apps/api/src/" "$API_DIR/src/"
 sudo cp "$REPO_DIR/apps/api/package.json" "$API_DIR/"
+sudo cp "$REPO_DIR/apps/api/tsconfig.json" "$API_DIR/"
 
 # Copy node_modules from monorepo root (where dependencies are hoisted)
 echo "Copying node_modules..."
