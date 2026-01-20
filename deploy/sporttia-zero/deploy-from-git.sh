@@ -60,14 +60,9 @@ sudo mkdir -p "$API_DIR/dist"
 sudo rsync -av --delete "$REPO_DIR/apps/api/dist/" "$API_DIR/dist/"
 sudo cp "$REPO_DIR/apps/api/package.json" "$API_DIR/"
 
-# Install production dependencies for API (from the monorepo)
-echo "Installing API production dependencies..."
-cd "$REPO_DIR"
-npm ci --omit=dev --workspace=apps/api
-
-# Copy the installed node_modules to API dir
+# Copy node_modules from monorepo root (where dependencies are hoisted)
 echo "Copying node_modules..."
-sudo rsync -av "$REPO_DIR/apps/api/node_modules/" "$API_DIR/node_modules/" 2>/dev/null || true
+sudo rsync -av --delete "$REPO_DIR/node_modules/" "$API_DIR/node_modules/"
 # Also copy shared package
 sudo mkdir -p "$API_DIR/node_modules/@sporttia-zero/shared"
 sudo rsync -av "$REPO_DIR/packages/shared/dist/" "$API_DIR/node_modules/@sporttia-zero/shared/dist/"
