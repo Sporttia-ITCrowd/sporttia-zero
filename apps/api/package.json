@@ -2,6 +2,7 @@
   "name": "@sporttia-zero/api",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Express.js API server for Sporttia ZERO",
   "main": "dist/index.js",
   "scripts": {
