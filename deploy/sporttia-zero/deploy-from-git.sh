@@ -60,10 +60,18 @@ sudo mkdir -p "$API_DIR/dist"
 sudo rsync -av --delete "$REPO_DIR/apps/api/dist/" "$API_DIR/dist/"
 sudo cp "$REPO_DIR/apps/api/package.json" "$API_DIR/"
 
-# Install production dependencies for API
+# Install production dependencies for API (from the monorepo)
 echo "Installing API production dependencies..."
-cd "$API_DIR"
-sudo npm install --omit=dev
+cd "$REPO_DIR"
+npm ci --omit=dev --workspace=apps/api
+
+# Copy the installed node_modules to API dir
+echo "Copying node_modules..."
+sudo rsync -av "$REPO_DIR/apps/api/node_modules/" "$API_DIR/node_modules/" 2>/dev/null || true
+# Also copy shared package
+sudo mkdir -p "$API_DIR/node_modules/@sporttia-zero/shared"
+sudo rsync -av "$REPO_DIR/packages/shared/dist/" "$API_DIR/node_modules/@sporttia-zero/shared/dist/"
+sudo cp "$REPO_DIR/packages/shared/package.json" "$API_DIR/node_modules/@sporttia-zero/shared/"
 sudo chown -R sporttia:sporttia "$API_DIR"
 
 # Deploy Web frontend
