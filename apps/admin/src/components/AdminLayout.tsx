@@ -178,6 +178,11 @@ export function AdminLayout() {
               </button>
             </div>
           </div>
+
+          {/* Version */}
+          <div className="px-4 py-2 text-xs text-gray-500 text-center">
+            v{__APP_VERSION__}
+          </div>
         </div>
       </div>
 

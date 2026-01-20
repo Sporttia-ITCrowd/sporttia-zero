@@ -57,6 +57,7 @@ export function createApp() {
     const health = {
       status: dbConnected ? 'ok' : 'degraded',
       timestamp: new Date().toISOString(),
+      version: '0.1.0',
       services: {
         database: dbConnected ? 'connected' : 'disconnected',
       },
@@ -69,24 +70,8 @@ export function createApp() {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // API health check (alias for consistency)
-  app.get('/api/health', async (_req, res) => {
-    const dbConnected = await checkDatabaseConnection();
-
-    const health = {
-      status: dbConnected ? 'ok' : 'degraded',
-      timestamp: new Date().toISOString(),
-      version: '0.1.0',
-      services: {
-        database: dbConnected ? 'connected' : 'disconnected',
-      },
-    };
-
-    res.status(dbConnected ? 200 : 503).json(health);
-  });
-
-  // API info endpoint
-  app.get('/api/v1', (_req, res) => {
+  // API info endpoint (nginx strips /api, so this becomes /v1)
+  app.get('/v1', (_req, res) => {
     res.json({
       name: 'Sporttia ZERO API',
       version: '0.1.0',
@@ -95,11 +80,12 @@ export function createApp() {
   });
 
   // API Routes
-  app.use('/api/conversations', conversationsRouter);
-  app.use('/api/admin', adminRouter);
+  // Note: nginx proxy strips /api prefix, so routes are mounted without it
+  app.use('/conversations', conversationsRouter);
+  app.use('/admin', adminRouter);
 
-  // 404 handler for API routes
-  app.use('/api/*', (_req, res) => {
+  // 404 handler for unmatched routes
+  app.use('*', (_req, res) => {
     sendError(res, ErrorCodes.NOT_FOUND, 'Endpoint not found', 404);
   });
 
