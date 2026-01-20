@@ -258,7 +258,12 @@ export class ApiError extends Error {
 
 // Get stored auth token
 function getAuthToken(): string | null {
-  return localStorage.getItem('admin_token');
+  const token = localStorage.getItem('admin_token');
+  // Check for invalid token values
+  if (!token || token === 'undefined' || token === 'null') {
+    return null;
+  }
+  return token;
 }
 
 // Generic fetch wrapper

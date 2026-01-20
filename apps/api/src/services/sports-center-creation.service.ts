@@ -64,7 +64,8 @@ function transformFacilityToZeroServiceFormat(facility: CollectedFacility): Zero
   return {
     name: facility.name,
     sport: {
-      name: facility.sportName, // ZeroService looks up sport by name
+      id: facility.sportId, // Use the sport ID from collected data
+      name: facility.sportName,
     },
     schedules: facility.schedules.map(transformScheduleToZeroServiceFormat),
   };

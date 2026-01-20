@@ -3,7 +3,7 @@ import { ZodError, z } from 'zod';
 import { login, SporttiaApiClientError } from '../lib/sporttia-client';
 import { sendSuccess, sendError, ErrorCodes } from '../lib/response';
 import { createLogger } from '../lib/logger';
-import { requireAuth, type AuthenticatedRequest } from '../middleware/auth';
+import { requireAuth, storeUserSession, type AuthenticatedRequest } from '../middleware/auth';
 import {
   conversationRepository,
   messageRepository,
@@ -37,9 +37,55 @@ router.post('/login', async (req, res: Response) => {
       password: validated.password,
     });
 
-    // Check if user has admin privileges
+    // Debug: log full response to see what fields are returned
+    logger.info(
+      {
+        responseKeys: Object.keys(result),
+        hasToken: !!result.token,
+        tokenLength: result.token?.length,
+        user: result.user
+      },
+      'Login response from Sporttia API'
+    );
+
+    // Validate response has user
+    if (!result.user) {
+      logger.error(
+        { login: validated.login, responseKeys: Object.keys(result) },
+        'Sporttia API response missing user'
+      );
+      return sendError(
+        res,
+        ErrorCodes.EXTERNAL_SERVICE_ERROR,
+        'Authentication failed: invalid response from server',
+        500
+      );
+    }
+
+    // Extract token - Sporttia API returns token inside user object
+    const userData = result.user as Record<string, unknown>;
+    const token = (userData.token || result.token) as string | undefined;
+
+    if (!token) {
+      logger.error(
+        { login: validated.login, userKeys: Object.keys(userData) },
+        'Sporttia API response missing token'
+      );
+      return sendError(
+        res,
+        ErrorCodes.EXTERNAL_SERVICE_ERROR,
+        'Authentication failed: invalid response from server',
+        500
+      );
+    }
+
+    // Check if user has admin privileges (case-insensitive)
+    // Support both 'privilege' and 'role' fields as API might use either
     const adminPrivileges = ['superadmin', 'admin'];
-    if (!adminPrivileges.includes(result.user.privilege)) {
+    const user = result.user as { privilege?: string; role?: string };
+    const userRole = user.privilege ?? user.role ?? '';
+    const userPrivilege = userRole.toLowerCase();
+    if (!adminPrivileges.includes(userPrivilege)) {
       logger.warn(
         { login: validated.login, privilege: result.user.privilege },
         'Login rejected - insufficient privileges'
@@ -53,18 +99,27 @@ router.post('/login', async (req, res: Response) => {
     }
 
     logger.info(
-      { userId: result.user.id, email: result.user.email, privilege: result.user.privilege },
+      { userId: result.user.id, email: result.user.email, privilege: userPrivilege },
       'Admin login successful'
     );
 
+    // Store user session for subsequent requests
+    storeUserSession(token, {
+      id: result.user.id,
+      login: result.user.login,
+      name: result.user.name || result.user.login || '',
+      email: result.user.email || result.user.login || '',
+      privilege: userPrivilege,
+    });
+
     sendSuccess(res, {
-      token: result.token,
+      token,
       user: {
         id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-        privilege: result.user.privilege,
-        lang: result.user.lang,
+        email: result.user.email || result.user.login || '',
+        name: result.user.name || result.user.login || '',
+        privilege: userPrivilege || result.user.privilege || 'user',
+        lang: result.user.lang || 'es',
       },
     });
   } catch (error) {
@@ -98,7 +153,13 @@ router.post('/login', async (req, res: Response) => {
       );
     }
 
-    logger.error({ error }, 'Unexpected error during login');
+    logger.error(
+      {
+        error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+        login: req.body?.login
+      },
+      'Unexpected error during login'
+    );
     sendError(res, ErrorCodes.INTERNAL_ERROR, 'Internal server error', 500);
   }
 });

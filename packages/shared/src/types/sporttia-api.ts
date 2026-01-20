@@ -195,9 +195,9 @@ export interface ZeroServiceCreateRequest {
  */
 export interface ZeroServiceFacilityResult {
   fieldId: number;
-  terrainId: number;
-  scheduleIds: number[];
-  priceIds: number[];
+  priceId: number | null;
+  scheduleId: number | null;
+  slotIds: number[];
 }
 
 /**

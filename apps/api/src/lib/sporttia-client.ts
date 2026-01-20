@@ -108,7 +108,7 @@ async function makeRequest<T>(
     }
 
     logger.info(
-      { method, endpoint, statusCode: response.status, duration },
+      { method, endpoint, statusCode: response.status, duration, responseKeys: Object.keys(responseData) },
       `Sporttia API response: ${response.status} (${duration}ms)`
     );
 

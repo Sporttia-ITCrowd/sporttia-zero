@@ -50,7 +50,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const token = localStorage.getItem(TOKEN_KEY);
       const storedUser = localStorage.getItem(USER_KEY);
 
-      if (!token || !storedUser) {
+      // Check for invalid token (missing, empty, or literal "undefined" string)
+      if (!token || !storedUser || token === 'undefined' || token === 'null') {
+        // Clear any invalid stored values
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
         setState({
           user: null,
           isAuthenticated: false,
@@ -96,6 +100,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       const response = await api.login(loginValue, password);
+
+      // Validate response has required fields
+      if (!response.token) {
+        throw new Error('Login response missing token');
+      }
+      if (!response.user) {
+        throw new Error('Login response missing user data');
+      }
 
       // Store token and user
       localStorage.setItem(TOKEN_KEY, response.token);
