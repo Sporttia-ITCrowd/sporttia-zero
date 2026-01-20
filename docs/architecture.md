@@ -8,6 +8,7 @@ This unified approach combines what would traditionally be separate backend and 
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
+| 2026-01-20 | 0.5 | Added GCP deployment infrastructure (sporttia-zero instance), nginx proxy config, deployment documentation | Claude |
 | 2026-01-19 | 0.4 | ZeroService implemented locally with direct MySQL connection to Sporttia database | Claude |
 | 2026-01-19 | 0.3 | Updated creation flow: AI calls create_sports_center function to trigger creation | Claude |
 | 2026-01-19 | 0.2 | Changed sports center creation from external API to internal ZeroService with direct database access | Claude |
@@ -2498,18 +2499,34 @@ LOG_LEVEL=debug
 
 ## 13. Deployment Architecture
 
+> **Note:** For detailed deployment procedures, see [docs/deployment.md](deployment.md)
+
 ### 13.1 Deployment Strategy
+
+**Infrastructure:**
+- **GCP Project:** `atlantean-app-120410` (Sporttia Web)
+- **Instance:** `sporttia-zero` (e2-small, europe-west1-b)
+- **IP Address:** 34.22.147.236
+- **Domain:** zero.sporttia.com
+
+**URL Routing:**
+| Path | Service | Description |
+|------|---------|-------------|
+| `/` | Web frontend | Public chat interface |
+| `/api/*` | API server | REST API (port 3000) |
+| `/manager` | Admin frontend | Admin dashboard |
 
 **Frontend Deployment:**
 - **Platform:** Google Compute Engine (Nginx static files)
-- **Build Command:** `npm run build -w apps/web && npm run build -w apps/admin`
+- **Build Command:** `npm run build -w apps/web && VITE_BASE_PATH=/manager npm run build -w apps/admin`
 - **Output Directory:** `apps/web/dist`, `apps/admin/dist`
-- **CDN/Edge:** Google Cloud CDN for static assets
+- **Server Path:** `/var/www/sporttia-zero/web`, `/var/www/sporttia-zero/admin`
 
 **Backend Deployment:**
 - **Platform:** Google Compute Engine (Node.js process)
 - **Build Command:** `npm run build -w apps/api`
-- **Deployment Method:** PM2 process manager, or systemd service
+- **Server Path:** `/opt/sporttia-zero/api`
+- **Deployment Method:** systemd service (`sporttia-zero-api.service`)
 
 ### 13.2 CI/CD Pipeline
 
@@ -2578,11 +2595,10 @@ jobs:
 
 ### 13.3 Environments
 
-| Environment | Frontend URL | Backend URL | Purpose |
-|-------------|--------------|-------------|---------|
-| Development | http://localhost:5173 | http://localhost:3001 | Local development |
-| Staging | https://pre-zero.sporttia.com | https://pre-zero.sporttia.com/api | Pre-production testing |
-| Production | https://zero.sporttia.com | https://zero.sporttia.com/api | Live environment |
+| Environment | Web Frontend | Admin Dashboard | API | Purpose |
+|-------------|--------------|-----------------|-----|---------|
+| Development | http://localhost:5173 | http://localhost:5174 | http://localhost:3000 | Local development |
+| Production | https://zero.sporttia.com | https://zero.sporttia.com/manager | https://zero.sporttia.com/api | Live environment |
 
 ---
 

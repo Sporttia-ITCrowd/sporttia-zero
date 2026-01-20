@@ -1,0 +1,29 @@
+[Unit]
+Description=Sporttia ZERO API Server
+After=network.target
+
+[Service]
+Type=simple
+User=sporttia
+Group=sporttia
+WorkingDirectory=/opt/sporttia-zero/api
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sporttia-zero-api
+
+# Environment
+Environment=NODE_ENV=production
+Environment=PORT=3000
+EnvironmentFile=/opt/sporttia-zero/api/.env
+
+# Security
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/sporttia-zero/api
+
+[Install]
+WantedBy=multi-user.target
