@@ -102,10 +102,15 @@ deploy/
 │   ├── nginx-local.conf          # Nginx config for static files
 │   ├── sporttia-zero-api.service # Systemd service for API
 │   ├── setup.sh                  # Server setup script
+│   ├── deploy-from-git.sh        # Server-side deploy (pulls from GitHub)
 │   └── .env.production           # Environment template
-├── deploy.sh                     # Build and deploy script
+├── deploy.sh                     # Local rsync deploy script (alternative)
 └── nginx.conf                    # (legacy, use sporttia-proxy config)
 ```
+
+## GitHub Repository
+
+**Repository:** https://github.com/sporttia/sporttia-zero (private)
 
 ## Initial Setup
 
@@ -154,6 +159,30 @@ A firewall rule `allow-sporttia-zero-internal` has been created to allow sportti
 
 ## Deploying Updates
 
+### Option 1: GitHub Pull (Recommended)
+
+SSH to the server and run:
+
+```bash
+ssh jperez@34.22.147.236
+sporttia-deploy
+```
+
+Or deploy a specific branch:
+
+```bash
+sporttia-deploy feature-branch
+```
+
+The script will:
+1. Pull latest code from GitHub
+2. Build all applications (API, Web, Admin)
+3. Deploy compiled files
+4. Install production dependencies
+5. Restart the API service
+
+### Option 2: Local rsync (Alternative)
+
 From your local machine:
 
 ```bash
@@ -162,8 +191,8 @@ cd /path/to/sporttia-zero-agent-2
 ```
 
 The script will:
-1. Build all applications (API, Web, Admin)
-2. Deploy compiled files to the server
+1. Build all applications locally
+2. Deploy compiled files via rsync
 3. Install production dependencies
 4. Restart the API service
 

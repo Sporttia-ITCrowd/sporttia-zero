@@ -12,7 +12,7 @@ sudo apt update && sudo apt upgrade -y
 
 # Install required packages
 echo "Installing required packages..."
-sudo apt install -y nginx
+sudo apt install -y nginx git rsync
 
 # Install Node.js 20 LTS
 echo "Installing Node.js 20 LTS..."
@@ -53,11 +53,16 @@ sudo nginx -t
 echo "Reloading nginx..."
 sudo systemctl reload nginx
 
+# Install deploy script
+echo "Installing deploy script..."
+sudo cp deploy-from-git.sh /usr/local/bin/sporttia-deploy
+sudo chmod +x /usr/local/bin/sporttia-deploy
+
 echo ""
 echo "=== Setup complete ==="
 echo ""
 echo "Next steps:"
 echo "1. Copy .env file: sudo cp .env.production /opt/sporttia-zero/api/.env"
 echo "2. Edit .env with real credentials: sudo nano /opt/sporttia-zero/api/.env"
-echo "3. Deploy the application using deploy.sh"
-echo "4. Start API: sudo systemctl start sporttia-zero-api"
+echo "3. Deploy: sporttia-deploy"
+echo "4. (Optional) Deploy specific branch: sporttia-deploy feature-branch"
