@@ -59,12 +59,11 @@ echo "=== Deploying API ==="
 sudo mkdir -p "$API_DIR/dist"
 sudo rsync -av --delete "$REPO_DIR/apps/api/dist/" "$API_DIR/dist/"
 sudo cp "$REPO_DIR/apps/api/package.json" "$API_DIR/"
-sudo cp "$REPO_DIR/apps/api/package-lock.json" "$API_DIR/"
 
 # Install production dependencies for API
 echo "Installing API production dependencies..."
 cd "$API_DIR"
-sudo npm ci --omit=dev
+sudo npm install --omit=dev
 sudo chown -R sporttia:sporttia "$API_DIR"
 
 # Deploy Web frontend
