@@ -87,12 +87,22 @@ export interface AnalyticsEventsTable {
   created_at: Generated<Date>;
 }
 
+// Feedbacks table
+export interface FeedbacksTable {
+  id: Generated<string>;
+  conversation_id: string | null;
+  message: string;
+  rating: number | null;
+  created_at: Generated<Date>;
+}
+
 // Database schema
 export interface Database {
   conversations: ConversationsTable;
   messages: MessagesTable;
   sports_centers: SportsCentersTable;
   analytics_events: AnalyticsEventsTable;
+  feedbacks: FeedbacksTable;
 }
 
 // Type helpers for CRUD operations
@@ -109,3 +119,6 @@ export type NewSportsCenter = Insertable<SportsCentersTable>;
 
 export type AnalyticsEvent = Selectable<AnalyticsEventsTable>;
 export type NewAnalyticsEvent = Insertable<AnalyticsEventsTable>;
+
+export type Feedback = Selectable<FeedbacksTable>;
+export type NewFeedback = Insertable<FeedbacksTable>;

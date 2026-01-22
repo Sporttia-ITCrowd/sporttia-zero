@@ -10,6 +10,7 @@ import { sportsCenterRepository } from '../repositories/sports-center.repository
 import type { CollectedData, CollectedFacility } from '../lib/db-types';
 import { createLogger } from '../lib/logger';
 import { sendWelcomeEmail } from './email.service';
+import { logSporttiaApiError, logInternalError, logAnalyticsEvent } from './analytics.service';
 
 const logger = createLogger('sports-center-creation-service');
 
@@ -241,6 +242,16 @@ export async function createSportsCenterFromConversation(
           message: error.message,
         },
         'ZeroService API error during creation'
+      );
+
+      // Log to analytics
+      logSporttiaApiError(
+        error.message,
+        {
+          statusCode: error.statusCode,
+          code: error.code,
+        },
+        conversationId
       );
 
       const isRetryable = error.statusCode >= 500 || error.code === 'TIMEOUT' || error.code === 'NETWORK_ERROR';

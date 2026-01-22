@@ -12,6 +12,7 @@ import type {
 } from '../lib/db-types';
 import { createLogger } from '../lib/logger';
 import { normalizeEmail, validateFacilitySchedules } from '../lib/validation';
+import { logInternalError } from '../services/analytics.service';
 
 const logger = createLogger('conversation-repository');
 
@@ -201,10 +202,33 @@ export const conversationRepository = {
       // We still store it - the AI will guide the user to fix issues
     }
 
-    return this.updateCollectedData(id, (current) => ({
-      ...current,
-      facilities: [...(current.facilities ?? []), facility],
-    }));
+    return this.updateCollectedData(id, (current) => {
+      const existingFacilities = current.facilities ?? [];
+      // Check if a facility with the same name already exists
+      const existingIndex = existingFacilities.findIndex(
+        (f) => f.name.toLowerCase() === facility.name.toLowerCase()
+      );
+
+      if (existingIndex >= 0) {
+        // Update existing facility instead of adding a duplicate
+        logger.info(
+          { id, facilityName: facility.name },
+          'Facility already exists, updating instead of adding duplicate'
+        );
+        const updatedFacilities = [...existingFacilities];
+        updatedFacilities[existingIndex] = facility;
+        return {
+          ...current,
+          facilities: updatedFacilities,
+        };
+      }
+
+      // Add new facility
+      return {
+        ...current,
+        facilities: [...existingFacilities, facility],
+      };
+    });
   },
 
   async updateFacility(
@@ -395,6 +419,12 @@ export const conversationRepository = {
     const currentData = conversation.collected_data ?? {};
     const currentRetryCount = currentData.lastError?.retryCount ?? 0;
 
+    // Log error to analytics for the Errors page in Manager
+    logInternalError(error.message, {
+      code: error.code,
+      retryCount: incrementRetry ? currentRetryCount + 1 : currentRetryCount,
+    }, id);
+
     return this.updateCollectedData(id, (current) => ({
       ...current,
       lastError: {
@@ -428,7 +458,11 @@ export const conversationRepository = {
     const result = await this.update(id, { status: 'error' });
 
     if (errorDetails) {
+      // recordError will log to analytics
       await this.recordError(id, { code: 'MARKED_ERROR', message: errorDetails }, false);
+    } else {
+      // Log generic error to analytics when no details provided
+      logInternalError('Conversation marked as error', { code: 'MARKED_ERROR' }, id);
     }
 
     return result;

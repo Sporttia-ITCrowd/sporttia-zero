@@ -3,6 +3,7 @@ import { openai, isOpenAIConfigured, AI_CONFIG } from '../lib/openai';
 import { getSystemPrompt, getOpenAITools, type SportForPrompt } from '../lib/prompts';
 import { createLogger } from '../lib/logger';
 import type { CollectedFacility } from '../lib/db-types';
+import { logOpenAIApiError } from './analytics.service';
 
 const logger = createLogger('ai-service');
 
@@ -176,7 +177,10 @@ export async function generateAIResponse(
       max_tokens: AI_CONFIG.maxTokens,
       temperature: AI_CONFIG.temperature,
       tools,
-      tool_choice: needsLanguageDetection ? 'auto' : undefined,
+      // Force the AI to call detect_language function on first message
+      tool_choice: needsLanguageDetection
+        ? { type: 'function', function: { name: 'detect_language' } }
+        : undefined,
     });
 
     const duration = Date.now() - startTime;
@@ -334,23 +338,69 @@ export async function generateAIResponse(
           max_tokens: AI_CONFIG.maxTokens,
           temperature: AI_CONFIG.temperature,
           tools: getOpenAITools(languageDetected || !!detectedLanguage),
-          tool_choice: 'none', // Force text response after processing function calls
+          tool_choice: 'auto', // Allow AI to call data collection functions after language detection
         });
 
         responseContent = followUpCompletion.choices[0]?.message?.content || '';
 
-        // Check for additional function calls in follow-up
+        // Check for additional function calls in follow-up and process them
         const followUpChoice = followUpCompletion.choices[0];
-        if (followUpChoice?.message?.tool_calls) {
+        const followUpToolResponses: ChatCompletionMessageParam[] = [];
+
+        if (followUpChoice?.message?.tool_calls && followUpChoice.message.tool_calls.length > 0) {
           for (const toolCall of followUpChoice.message.tool_calls) {
             try {
               const args = JSON.parse(toolCall.function.arguments);
+              const funcName = toolCall.function.name;
+
+              logger.info(
+                { conversationId, functionName: funcName, args },
+                `Follow-up function called: ${funcName}`
+              );
+
+              // Add to function calls for processing by route handler
               functionCalls.push({
-                name: toolCall.function.name,
+                name: funcName,
                 data: args,
+              });
+
+              followUpToolResponses.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                content: JSON.stringify({ success: true, message: 'Data saved' }),
               });
             } catch {
               // Ignore parse errors in follow-up
+            }
+          }
+
+          // If follow-up had function calls but no content, make another call for text response
+          if (!responseContent && followUpToolResponses.length > 0) {
+            logger.info(
+              { conversationId, functionCount: followUpToolResponses.length },
+              'Making second follow-up call for text response'
+            );
+
+            const secondFollowUp = await openai.chat.completions.create({
+              model: AI_CONFIG.model,
+              messages: [
+                ...followUpMessages,
+                followUpChoice.message as ChatCompletionMessageParam,
+                ...followUpToolResponses,
+              ],
+              max_tokens: AI_CONFIG.maxTokens,
+              temperature: AI_CONFIG.temperature,
+              tools: getOpenAITools(true), // Language already detected
+              tool_choice: 'none', // Force text response now
+            });
+
+            responseContent = secondFollowUp.choices[0]?.message?.content || '';
+
+            // Update usage
+            if (secondFollowUp.usage) {
+              usage!.prompt_tokens += secondFollowUp.usage.prompt_tokens;
+              usage!.completion_tokens += secondFollowUp.usage.completion_tokens;
+              usage!.total_tokens += secondFollowUp.usage.total_tokens;
             }
           }
         }
@@ -419,6 +469,17 @@ export async function generateAIResponse(
         durationMs: duration,
       },
       'OpenAI API error'
+    );
+
+    // Log to analytics
+    logOpenAIApiError(
+      openAIError.message || String(error),
+      {
+        status: openAIError.status,
+        code: openAIError.code,
+        durationMs: duration,
+      },
+      conversationId
     );
 
     // Rate limiting

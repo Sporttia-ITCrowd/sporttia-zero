@@ -5,8 +5,6 @@ import packageJson from './package.json';
 
 export default defineConfig({
   plugins: [react()],
-  // Base path for production (served from /manager)
-  base: process.env.NODE_ENV === 'production' ? '/manager/' : '/',
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
@@ -16,11 +14,12 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5174,
+    port: 4502,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:4500',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

@@ -1,17 +1,72 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useChat } from '../../hooks/useChat';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { InfoSidebar } from './InfoSidebar';
+import { StarRatingPopup } from './StarRatingPopup';
 import { cn } from '../../lib/utils';
+import { api } from '../../lib/api';
+
+// Storage key for tracking if feedback was already shown for a conversation
+const FEEDBACK_SHOWN_KEY = 'sporttia_zero_feedback_shown';
 
 export function ChatContainer() {
-  const { messages, status, error, sendMessage, clearError, resetConversation } = useChat();
+  const { messages, status, error, language, conversationId, sendMessage, clearError, resetConversation } = useChat();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showRatingPopup, setShowRatingPopup] = useState(false);
 
   const isLoading = status === 'loading';
   const isSending = status === 'sending';
   const isInitializing = isLoading && messages.length === 0;
+
+  // Detect when sports center creation is successful and show rating popup
+  useEffect(() => {
+    if (!conversationId || messages.length === 0) return;
+
+    // Check if we already showed feedback for this conversation
+    const shownConversations = JSON.parse(localStorage.getItem(FEEDBACK_SHOWN_KEY) || '[]');
+    if (shownConversations.includes(conversationId)) return;
+
+    // Look for a message with successful create_sports_center function call
+    const hasSuccessfulCreation = messages.some((msg) => {
+      if (msg.role !== 'assistant' || !msg.metadata) return false;
+      const functionCalls = (msg.metadata as { functionCalls?: Array<{ name: string; result?: { success?: boolean } }> }).functionCalls;
+      if (!functionCalls) return false;
+      return functionCalls.some(
+        (fc) => fc.name === 'create_sports_center' && fc.result?.success === true
+      );
+    });
+
+    if (hasSuccessfulCreation) {
+      // Small delay to let the user read the success message
+      const timer = setTimeout(() => {
+        setShowRatingPopup(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, conversationId]);
+
+  const handleRatingSubmit = async (rating: number, comment?: string) => {
+    await api.submitFeedback(comment || '', conversationId, rating);
+    // Mark this conversation as having shown feedback
+    const shownConversations = JSON.parse(localStorage.getItem(FEEDBACK_SHOWN_KEY) || '[]');
+    if (!shownConversations.includes(conversationId)) {
+      shownConversations.push(conversationId);
+      localStorage.setItem(FEEDBACK_SHOWN_KEY, JSON.stringify(shownConversations));
+    }
+  };
+
+  const handleRatingClose = () => {
+    setShowRatingPopup(false);
+    // Also mark as shown when skipped
+    if (conversationId) {
+      const shownConversations = JSON.parse(localStorage.getItem(FEEDBACK_SHOWN_KEY) || '[]');
+      if (!shownConversations.includes(conversationId)) {
+        shownConversations.push(conversationId);
+        localStorage.setItem(FEEDBACK_SHOWN_KEY, JSON.stringify(shownConversations));
+      }
+    }
+  };
 
   return (
     <div className="flex min-h-screen decorative-bg">
@@ -116,9 +171,17 @@ export function ChatContainer() {
           </div>
 
           {/* Info Sidebar - hidden on mobile */}
-          <InfoSidebar />
+          <InfoSidebar language={language} conversationId={conversationId} />
         </div>
       </div>
+
+      {/* Star Rating Popup */}
+      <StarRatingPopup
+        isOpen={showRatingPopup}
+        onClose={handleRatingClose}
+        onSubmit={handleRatingSubmit}
+        language={language}
+      />
     </div>
   );
 }

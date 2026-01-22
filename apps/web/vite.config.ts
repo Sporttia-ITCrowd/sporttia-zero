@@ -10,10 +10,15 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 4501,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:4500',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/manager': {
+        target: 'http://localhost:4502',
         changeOrigin: true,
       },
     },

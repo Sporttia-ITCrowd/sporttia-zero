@@ -8,6 +8,7 @@ This unified approach combines what would traditionally be separate backend and 
 
 | Date | Version | Description | Author |
 |------|---------|-------------|--------|
+| 2026-01-22 | 0.6 | Added Docker containerization for all services (API, Web, Admin) | Claude |
 | 2026-01-20 | 0.5 | Added GCP deployment infrastructure (sporttia-zero instance), nginx proxy config, deployment documentation | Claude |
 | 2026-01-19 | 0.4 | ZeroService implemented locally with direct MySQL connection to Sporttia database | Claude |
 | 2026-01-19 | 0.3 | Updated creation flow: AI calls create_sports_center function to trigger creation | Claude |
@@ -2599,6 +2600,60 @@ jobs:
 |-------------|--------------|-----------------|-----|---------|
 | Development | http://localhost:5173 | http://localhost:5174 | http://localhost:3000 | Local development |
 | Production | https://zero.sporttia.com | https://zero.sporttia.com/manager | https://zero.sporttia.com/api | Live environment |
+
+### 13.4 Docker Deployment
+
+**Docker Configuration Files:**
+- `docker-compose.yml` - Orchestrates all services
+- `apps/api/Dockerfile` - API server container
+- `apps/web/Dockerfile` - Web frontend container
+- `apps/admin/Dockerfile` - Admin dashboard container
+- `deploy/docker-nginx.conf` - Nginx reverse proxy for Docker
+
+**Container Architecture:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    docker-compose.yml                        │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐  │
+│  │  nginx  │    │   api   │    │   web   │    │  admin  │  │
+│  │  :80    │───▶│  :3000  │    │   :80   │    │   :80   │  │
+│  │  :443   │───▶│         │    │         │    │         │  │
+│  └─────────┘    └─────────┘    └─────────┘    └─────────┘  │
+│       │              │              │              │        │
+│       └──────────────┴──────────────┴──────────────┘        │
+│                    sporttia-network                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Quick Start:**
+```bash
+# Build and start all services
+docker compose up -d --build
+
+# View logs
+docker compose logs -f
+
+# Stop all services
+docker compose down
+```
+
+**Port Mapping:**
+| Service | Internal Port | External Port |
+|---------|---------------|---------------|
+| nginx | 80, 443 | 80, 443 |
+| api | 3000 | 3000 |
+| web | 80 | 4000 |
+| admin | 80 | 5000 |
+
+**Environment Configuration:**
+Create a `.env` file in the root directory with required variables:
+```env
+DATABASE_URL=postgresql://...
+OPENAI_API_KEY=sk-...
+RESEND_API_KEY=re_...
+# See .env.example for full list
+```
 
 ---
 

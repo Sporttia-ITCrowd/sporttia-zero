@@ -9,6 +9,7 @@ export interface UseChatReturn {
   status: ChatStatus;
   error: string | null;
   conversationId: string | null;
+  language: string | null;
   sendMessage: (content: string) => Promise<void>;
   clearError: () => void;
   resetConversation: () => Promise<void>;
@@ -21,6 +22,7 @@ export function useChat(): UseChatReturn {
   const [status, setStatus] = useState<ChatStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string | null>(null);
   const initializingRef = useRef(false);
   const mountedRef = useRef(true);
 
@@ -46,6 +48,9 @@ export function useChat(): UseChatReturn {
             const conversation = await api.getConversation(storedConversationId);
             if (!mountedRef.current) return;
             setConversationId(conversation.id);
+            // Only show language if there are user messages (meaning language was detected)
+            const hasUserMessages = conversation.messages.some(m => m.role === 'user');
+            setLanguage(hasUserMessages ? conversation.language : null);
             setMessages(conversation.messages);
             setStatus('idle');
             return;
@@ -59,10 +64,12 @@ export function useChat(): UseChatReturn {
 
         // Create new conversation with browser language
         const sessionId = getOrCreateSessionId();
-        const language = getBrowserLanguage();
-        const conversation = await api.createConversation(sessionId, language);
+        const browserLanguage = getBrowserLanguage();
+        const conversation = await api.createConversation(sessionId, browserLanguage);
         if (!mountedRef.current) return;
         setConversationId(conversation.id);
+        // Don't set language yet - it will be detected from user's first message
+        setLanguage(null);
         localStorage.setItem(CONVERSATION_STORAGE_KEY, conversation.id);
         setMessages([]);
         setStatus('idle');
@@ -117,6 +124,11 @@ export function useChat(): UseChatReturn {
         return newMessages;
       });
 
+      // Update language if it was detected/changed
+      if (response.language) {
+        setLanguage(response.language);
+      }
+
       setStatus('idle');
     } catch (err) {
       // Remove optimistic message on error
@@ -142,6 +154,7 @@ export function useChat(): UseChatReturn {
     setError(null);
     setMessages([]);
     setConversationId(null);
+    setLanguage(null);
 
     // Clear stored conversation
     localStorage.removeItem(CONVERSATION_STORAGE_KEY);
@@ -149,9 +162,11 @@ export function useChat(): UseChatReturn {
     try {
       // Create new conversation with browser language
       const sessionId = getOrCreateSessionId();
-      const language = getBrowserLanguage();
-      const conversation = await api.createConversation(sessionId, language);
+      const browserLanguage = getBrowserLanguage();
+      const conversation = await api.createConversation(sessionId, browserLanguage);
       setConversationId(conversation.id);
+      // Don't set language yet - it will be detected from user's first message
+      setLanguage(null);
       localStorage.setItem(CONVERSATION_STORAGE_KEY, conversation.id);
       setStatus('idle');
     } catch (err) {
@@ -168,6 +183,7 @@ export function useChat(): UseChatReturn {
     status,
     error,
     conversationId,
+    language,
     sendMessage,
     clearError,
     resetConversation,

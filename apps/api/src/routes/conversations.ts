@@ -23,6 +23,7 @@ import { createSportsCenterFromConversation } from '../services/sports-center-cr
 const router = Router();
 const logger = createLogger('conversations-api');
 
+
 // Helper to convert DB record to API response format (snake_case to camelCase)
 function toApiConversation(conv: {
   id: string;
@@ -251,23 +252,29 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
           availableSports,
         });
 
-        // If language was detected, update the conversation record and collected data
-        if (aiResult.detectedLanguage && aiResult.detectedLanguage.code !== conversation.language) {
-          logger.info(
-            {
-              conversationId,
-              oldLanguage: conversation.language,
-              newLanguage: aiResult.detectedLanguage.code,
-              confidence: aiResult.detectedLanguage.confidence,
-            },
-            'Updating conversation language'
-          );
-          await conversationRepository.updateLanguage(conversationId, aiResult.detectedLanguage.code);
-          // Also store language in collected_data for the sports center creation
+        // If language was detected by AI, update the conversation record and collected data
+        if (aiResult.detectedLanguage) {
+          const newLanguage = aiResult.detectedLanguage.code;
+
+          // Always store the detected language in collected_data
           await conversationRepository.updateCollectedData(conversationId, (current) => ({
             ...current,
-            language: aiResult.detectedLanguage!.code,
+            language: newLanguage,
           }));
+
+          // Only update conversation.language if it's different
+          if (newLanguage !== conversation.language) {
+            logger.info(
+              {
+                conversationId,
+                oldLanguage: conversation.language,
+                newLanguage,
+                confidence: aiResult.detectedLanguage.confidence,
+              },
+              'Updating conversation language'
+            );
+            await conversationRepository.updateLanguage(conversationId, newLanguage);
+          }
         }
 
         // Process function calls and store collected data
@@ -381,10 +388,8 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
 
                   // Inject a system message with the creation result for follow-up
                   // This helps the AI generate the proper success message
-                  const loginInfo = creationResult.sportsCenter?.adminLogin && creationResult.sportsCenter?.adminPassword
-                    ? ` Their admin credentials are: Login: ${creationResult.sportsCenter.adminLogin}, Password: ${creationResult.sportsCenter.adminPassword}. IMPORTANT: Tell the user these credentials so they can access Sporttia Manager (manager.sporttia.com).`
-                    : '';
-                  const successContext = `SYSTEM: Sports center "${creationResult.sportsCenter?.name}" was created successfully! Sporttia ID: ${creationResult.sportsCenter?.sporttiaId}. Admin email: ${creationResult.sportsCenter?.adminEmail}.${loginInfo} Now inform the user with a congratulatory message, provide their login credentials, and explain next steps (access manager.sporttia.com, change password, customize their center).`;
+                  // IMPORTANT: Do NOT include the password in the chat - it's sent via email for security
+                  const successContext = `SYSTEM: Sports center "${creationResult.sportsCenter?.name}" was created successfully! Sporttia ID: ${creationResult.sportsCenter?.sporttiaId}. Admin email: ${creationResult.sportsCenter?.adminEmail}. IMPORTANT: The login credentials (username and password) have been sent to their email address (${creationResult.sportsCenter?.adminEmail}). Do NOT show the password in the chat for security reasons. Tell the user to check their email for the login credentials. Congratulate them and explain next steps: check email for credentials, access manager.sporttia.com, change password on first login, and customize their center.`;
                   conversationHistory.push({
                     role: 'system',
                     content: successContext,
@@ -509,9 +514,14 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
       logger.warn({ conversationId }, 'AI service not available - returning without AI response');
     }
 
+    // Get the current language (may have been updated by AI detection)
+    const updatedConversation = await conversationRepository.findById(conversationId);
+    const currentLanguage = updatedConversation?.language || conversation.language;
+
     sendSuccess(res, {
       message: toApiMessage(userMessage),
       assistantMessage,
+      language: currentLanguage,
     }, 201);
   } catch (error) {
     if (error instanceof ZodError) {
@@ -750,6 +760,78 @@ router.post('/:id/escalate', async (req: Request, res: Response) => {
 
     logger.error({ error, conversationId: req.params.id }, 'Error escalating conversation');
     sendError(res, ErrorCodes.INTERNAL_ERROR, 'Internal server error', 500);
+  }
+});
+
+/**
+ * POST /api/conversations/feedback
+ * Submit feedback about the assistant (with optional star rating)
+ */
+router.post('/feedback', async (req: Request, res: Response) => {
+  try {
+    const { message, conversationId, rating } = req.body as {
+      message?: string;
+      conversationId?: string;
+      rating?: number;
+    };
+
+    // Message is optional if rating is provided
+    const hasMessage = message && typeof message === 'string' && message.trim().length > 0;
+    const hasRating = typeof rating === 'number' && rating >= 1 && rating <= 5;
+
+    if (!hasMessage && !hasRating) {
+      return sendError(res, ErrorCodes.VALIDATION_ERROR, 'Feedback message or rating is required', 400);
+    }
+
+    if (hasMessage && message.length > 2000) {
+      return sendError(res, ErrorCodes.VALIDATION_ERROR, 'Feedback message is too long (max 2000 characters)', 400);
+    }
+
+    if (rating !== undefined && !hasRating) {
+      return sendError(res, ErrorCodes.VALIDATION_ERROR, 'Rating must be between 1 and 5', 400);
+    }
+
+    // Validate conversationId if provided
+    let validConversationId: string | null = null;
+    if (conversationId) {
+      try {
+        validConversationId = uuidSchema.parse(conversationId);
+      } catch {
+        // Invalid UUID, just ignore it
+        validConversationId = null;
+      }
+    }
+
+    // Import db here to avoid circular dependencies
+    const { db } = await import('../lib/db');
+
+    if (!db) {
+      logger.error('Database not available for feedback submission');
+      return sendError(res, ErrorCodes.DATABASE_ERROR, 'Database not available', 500);
+    }
+
+    const feedback = await db
+      .insertInto('feedbacks')
+      .values({
+        message: hasMessage ? message.trim() : '',
+        conversation_id: validConversationId,
+        rating: hasRating ? rating : null,
+      })
+      .returning(['id', 'created_at'])
+      .executeTakeFirst();
+
+    logger.info(
+      { feedbackId: feedback?.id, conversationId: validConversationId, rating: hasRating ? rating : null },
+      'Feedback submitted'
+    );
+
+    sendSuccess(res, {
+      success: true,
+      feedbackId: feedback?.id,
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error submitting feedback');
+    sendError(res, ErrorCodes.INTERNAL_ERROR, 'Failed to submit feedback', 500);
   }
 });
 

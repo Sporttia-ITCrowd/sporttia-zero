@@ -237,6 +237,35 @@ export interface ErrorsListParams {
   limit?: number;
 }
 
+// Feedback types
+export interface Feedback {
+  id: string;
+  message: string;
+  conversationId: string | null;
+  language: string | null;
+  rating: number | null;
+  createdAt: string;
+}
+
+export interface FeedbacksListResponse {
+  feedbacks: Feedback[];
+  stats: {
+    averageRating: number | null;
+    totalRatings: number;
+  };
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface FeedbacksListParams {
+  page?: number;
+  limit?: number;
+}
+
 // API Error class
 export class ApiError extends Error {
   code: string;
@@ -362,6 +391,15 @@ export const api = {
     return apiFetch<ConversationDetailResponse>(`/admin/conversations/${id}`, {}, true);
   },
 
+  // Send welcome email for a conversation (for testing)
+  async sendWelcomeEmail(conversationId: string): Promise<{ success: boolean; messageId?: string; message: string }> {
+    return apiFetch<{ success: boolean; messageId?: string; message: string }>(
+      `/admin/conversations/${conversationId}/send-welcome-email`,
+      { method: 'POST' },
+      true
+    );
+  },
+
   // Get dashboard metrics
   async getMetrics(params: MetricsParams = {}): Promise<MetricsResponse> {
     const searchParams = new URLSearchParams();
@@ -389,5 +427,18 @@ export const api = {
     const endpoint = `/admin/errors${queryString ? `?${queryString}` : ''}`;
 
     return apiFetch<ErrorsListResponse>(endpoint, {}, true);
+  },
+
+  // Get feedbacks list
+  async getFeedbacks(params: FeedbacksListParams = {}): Promise<FeedbacksListResponse> {
+    const searchParams = new URLSearchParams();
+
+    if (params.page) searchParams.set('page', params.page.toString());
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+
+    const queryString = searchParams.toString();
+    const endpoint = `/admin/feedbacks${queryString ? `?${queryString}` : ''}`;
+
+    return apiFetch<FeedbacksListResponse>(endpoint, {}, true);
   },
 };

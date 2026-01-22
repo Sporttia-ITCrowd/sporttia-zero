@@ -7,6 +7,7 @@ import {
   type SupportedLanguage,
 } from '../lib/email-templates';
 import { createLogger } from '../lib/logger';
+import { logEmailFailed } from './analytics.service';
 
 const logger = createLogger('email-service');
 
@@ -175,6 +176,14 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<Send
     },
     'Failed to send welcome email after all retries'
   );
+
+  // Log to analytics for the Errors page in Manager
+  logEmailFailed(lastError?.message || 'Failed to send email', {
+    to: adminEmail,
+    sportsCenterName,
+    sporttiaId,
+    retries: EMAIL_CONFIG.maxRetries,
+  });
 
   return {
     success: false,

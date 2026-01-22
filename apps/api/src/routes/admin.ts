@@ -11,6 +11,7 @@ import {
 import { db } from '../lib/db';
 import { sql } from 'kysely';
 import type { ConversationStatus, CollectedData } from '../lib/db-types';
+import { sendWelcomeEmail } from '../services/email.service';
 
 const router = Router();
 const logger = createLogger('admin-api');
@@ -752,6 +753,187 @@ router.get('/conversations/:id', requireAuth, async (req: AuthenticatedRequest, 
   } catch (error) {
     logger.error({ error, conversationId: req.params.id }, 'Failed to get conversation detail');
     sendError(res, ErrorCodes.INTERNAL_ERROR, 'Failed to get conversation details', 500);
+  }
+});
+
+// Validation schema for feedbacks list
+const feedbacksListSchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+});
+
+/**
+ * GET /api/admin/feedbacks
+ * List all feedbacks with pagination
+ */
+router.get('/feedbacks', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const validated = feedbacksListSchema.parse(req.query);
+    const offset = (validated.page - 1) * validated.limit;
+
+    logger.info({ filters: validated, userId: req.user?.id }, 'Listing feedbacks');
+
+    if (!db) {
+      return sendError(res, ErrorCodes.DATABASE_ERROR, 'Database not available', 500);
+    }
+
+    // Get total count
+    const countResult = await db
+      .selectFrom('feedbacks')
+      .select(sql<number>`count(*)`.as('count'))
+      .executeTakeFirst();
+
+    const total = Number(countResult?.count ?? 0);
+
+    // Get feedbacks with pagination
+    const feedbacks = await db
+      .selectFrom('feedbacks')
+      .leftJoin('conversations', 'feedbacks.conversation_id', 'conversations.id')
+      .select([
+        'feedbacks.id',
+        'feedbacks.message',
+        'feedbacks.conversation_id',
+        'feedbacks.created_at',
+        'feedbacks.rating',
+        'conversations.language',
+      ])
+      .orderBy('feedbacks.created_at', 'desc')
+      .offset(offset)
+      .limit(validated.limit)
+      .execute();
+
+    // Get average rating
+    const avgRatingResult = await db
+      .selectFrom('feedbacks')
+      .select([
+        sql<number>`avg(rating)::numeric(3,2)`.as('avgRating'),
+        sql<number>`count(rating)::int`.as('ratingCount'),
+      ])
+      .where('rating', 'is not', null)
+      .executeTakeFirst();
+
+    const formattedFeedbacks = feedbacks.map((f) => ({
+      id: f.id,
+      message: f.message,
+      conversationId: f.conversation_id,
+      language: f.language || null,
+      rating: f.rating || null,
+      createdAt: f.created_at,
+    }));
+
+    sendSuccess(res, {
+      feedbacks: formattedFeedbacks,
+      stats: {
+        averageRating: avgRatingResult?.avgRating ? Number(avgRatingResult.avgRating) : null,
+        totalRatings: avgRatingResult?.ratingCount || 0,
+      },
+      pagination: {
+        total,
+        page: validated.page,
+        limit: validated.limit,
+        totalPages: Math.ceil(total / validated.limit),
+      },
+    });
+  } catch (error) {
+    if (error instanceof ZodError) {
+      logger.warn({ errors: error.errors }, 'Validation error listing feedbacks');
+      return sendError(res, ErrorCodes.VALIDATION_ERROR, 'Invalid query parameters', 400, {
+        errors: error.errors,
+      });
+    }
+
+    logger.error({ error }, 'Failed to list feedbacks');
+    sendError(res, ErrorCodes.INTERNAL_ERROR, 'Failed to list feedbacks', 500);
+  }
+});
+
+/**
+ * POST /api/admin/conversations/:id/send-welcome-email
+ * Send or resend the welcome email for a conversation (for testing)
+ */
+router.post('/conversations/:id/send-welcome-email', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const conversationId = req.params.id;
+
+    logger.info({ conversationId, userId: req.user?.id }, 'Sending test welcome email');
+
+    // Get conversation with collected data
+    const conversation = await conversationRepository.findById(conversationId);
+    if (!conversation) {
+      return sendError(res, ErrorCodes.NOT_FOUND, 'Conversation not found', 404);
+    }
+
+    const collectedData = conversation.collected_data;
+    if (!collectedData) {
+      return sendError(res, ErrorCodes.VALIDATION_ERROR, 'No collected data in conversation', 400);
+    }
+
+    // Validate required fields for email
+    if (!collectedData.sportsCenterName || !collectedData.adminName || !collectedData.adminEmail) {
+      return sendError(
+        res,
+        ErrorCodes.VALIDATION_ERROR,
+        'Missing required data: sportsCenterName, adminName, or adminEmail',
+        400
+      );
+    }
+
+    // Get sports center if it exists (for sporttiaId)
+    let sporttiaId = 0;
+    if (db) {
+      const sportsCenter = await db
+        .selectFrom('sports_centers')
+        .select(['sporttia_id'])
+        .where('conversation_id', '=', conversationId)
+        .executeTakeFirst();
+
+      if (sportsCenter) {
+        sporttiaId = sportsCenter.sporttia_id;
+      }
+    }
+
+    // Send the welcome email
+    const emailResult = await sendWelcomeEmail({
+      sportsCenterName: collectedData.sportsCenterName,
+      adminName: collectedData.adminName,
+      adminEmail: collectedData.adminEmail,
+      adminLogin: 'test-login', // Test values
+      adminPassword: 'test-password', // Test values
+      city: collectedData.city || 'Unknown',
+      facilitiesCount: collectedData.facilities?.length || 0,
+      facilities: (collectedData.facilities || []).map((f) => ({
+        name: f.name,
+        sportName: f.sportName,
+      })),
+      sporttiaId: sporttiaId,
+      language: collectedData.language || conversation.language || 'es',
+    });
+
+    if (emailResult.success) {
+      logger.info(
+        { conversationId, messageId: emailResult.messageId },
+        'Test welcome email sent successfully'
+      );
+      sendSuccess(res, {
+        success: true,
+        messageId: emailResult.messageId,
+        message: 'Welcome email sent successfully',
+      });
+    } else {
+      logger.warn(
+        { conversationId, error: emailResult.error },
+        'Failed to send test welcome email'
+      );
+      sendError(
+        res,
+        ErrorCodes.EXTERNAL_SERVICE_ERROR,
+        emailResult.error?.message || 'Failed to send email',
+        500
+      );
+    }
+  } catch (error) {
+    logger.error({ error, conversationId: req.params.id }, 'Error sending welcome email');
+    sendError(res, ErrorCodes.INTERNAL_ERROR, 'Failed to send welcome email', 500);
   }
 });
 

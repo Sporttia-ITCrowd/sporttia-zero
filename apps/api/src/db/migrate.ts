@@ -1,8 +1,11 @@
 import 'dotenv/config';
 import { Pool } from 'pg';
 import { readdir, readFile } from 'fs/promises';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const MIGRATIONS_DIR = join(__dirname, 'migrations');
 
 interface MigrationRecord {

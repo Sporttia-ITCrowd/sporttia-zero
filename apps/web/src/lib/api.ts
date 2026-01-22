@@ -93,8 +93,8 @@ export const api = {
   async sendMessage(
     conversationId: string,
     content: string
-  ): Promise<{ message: Message; assistantMessage: Message | null }> {
-    return apiFetch<{ message: Message; assistantMessage: Message | null }>(
+  ): Promise<{ message: Message; assistantMessage: Message | null; language?: string }> {
+    return apiFetch<{ message: Message; assistantMessage: Message | null; language?: string }>(
       `/conversations/${conversationId}/messages`,
       {
         method: 'POST',
@@ -106,5 +106,17 @@ export const api = {
   // Health check
   async healthCheck(): Promise<{ status: string; services: { database: string } }> {
     return apiFetch<{ status: string; services: { database: string } }>('/health');
+  },
+
+  // Submit feedback with optional rating
+  async submitFeedback(
+    message: string,
+    conversationId?: string | null,
+    rating?: number
+  ): Promise<{ success: boolean; feedbackId: string }> {
+    return apiFetch<{ success: boolean; feedbackId: string }>('/conversations/feedback', {
+      method: 'POST',
+      body: JSON.stringify({ message, conversationId, rating }),
+    });
   },
 };

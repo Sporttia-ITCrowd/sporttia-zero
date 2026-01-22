@@ -7,14 +7,12 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ConversationsPage } from './pages/ConversationsPage';
 import { ConversationDetailPage } from './pages/ConversationDetailPage';
 import { ErrorsPage } from './pages/ErrorsPage';
-
-// Base path for router - /manager in production, / in development
-const basename = import.meta.env.PROD ? '/manager' : '/';
+import { FeedbacksPage } from './pages/FeedbacksPage';
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter basename={basename}>
+      <BrowserRouter>
         <Routes>
           {/* Public route: Login */}
           <Route path="/login" element={<LoginPage />} />
@@ -32,6 +30,7 @@ function App() {
             <Route path="conversations" element={<ConversationsPage />} />
             <Route path="conversations/:id" element={<ConversationDetailPage />} />
             <Route path="errors" element={<ErrorsPage />} />
+            <Route path="feedbacks" element={<FeedbacksPage />} />
           </Route>
 
           {/* Catch all - redirect to dashboard */}

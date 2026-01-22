@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { api } from '../../lib/api';
+
 interface InfoCardProps {
   icon: React.ReactNode;
   children: React.ReactNode;
@@ -12,7 +15,42 @@ function InfoCard({ icon, children }: InfoCardProps) {
   );
 }
 
-export function InfoSidebar() {
+const LANGUAGE_NAMES: Record<string, string> = {
+  es: 'Español',
+  en: 'English',
+  pt: 'Português',
+  fr: 'Français',
+  de: 'Deutsch',
+  it: 'Italiano',
+};
+
+interface InfoSidebarProps {
+  language?: string | null;
+  conversationId?: string | null;
+}
+
+export function InfoSidebar({ language, conversationId }: InfoSidebarProps) {
+  const languageName = language ? LANGUAGE_NAMES[language] || language : null;
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  const handleSubmitFeedback = async () => {
+    if (!feedbackText.trim() || feedbackStatus === 'sending') return;
+
+    setFeedbackStatus('sending');
+    try {
+      await api.submitFeedback(feedbackText.trim(), conversationId);
+      setFeedbackStatus('sent');
+      setFeedbackText('');
+      // Reset status after 3 seconds
+      setTimeout(() => setFeedbackStatus('idle'), 3000);
+    } catch {
+      setFeedbackStatus('error');
+      // Reset status after 3 seconds
+      setTimeout(() => setFeedbackStatus('idle'), 3000);
+    }
+  };
+
   return (
     <div className="hidden lg:flex flex-col gap-4 w-full max-w-md">
       {/* Info Card */}
@@ -38,19 +76,56 @@ export function InfoSidebar() {
         </p>
       </InfoCard>
 
+      {/* Language indicator */}
+      {languageName && (
+        <InfoCard icon={<LanguageIcon className="w-6 h-6" />}>
+          <p>
+            <span className="text-muted-foreground">Language:</span>{' '}
+            <span className="font-medium">{languageName}</span>
+          </p>
+        </InfoCard>
+      )}
+
       {/* Feedback Card */}
-      <InfoCard icon={<EmailIcon className="w-6 h-6" />}>
-        <p>
-          If you want to leave feedback about this assistant, please write to us at{' '}
-          <a
-            href="mailto:zero@sporttia.com"
-            className="text-primary hover:underline font-medium"
-          >
-            zero@sporttia.com
-          </a>
-          .
-        </p>
-      </InfoCard>
+      <div className="info-card">
+        <div className="flex gap-4 mb-3">
+          <div className="flex-shrink-0 text-primary">
+            <FeedbackIcon className="w-6 h-6" />
+          </div>
+          <p className="text-sm text-foreground leading-relaxed">
+            Share your feedback about this assistant:
+          </p>
+        </div>
+        <div className="space-y-2">
+          <textarea
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            placeholder="Write your feedback here..."
+            className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+            rows={3}
+            maxLength={2000}
+            disabled={feedbackStatus === 'sending'}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {feedbackText.length}/2000
+            </span>
+            <button
+              onClick={handleSubmitFeedback}
+              disabled={!feedbackText.trim() || feedbackStatus === 'sending'}
+              className="px-4 py-1.5 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {feedbackStatus === 'sending' ? 'Sending...' : 'Send'}
+            </button>
+          </div>
+          {feedbackStatus === 'sent' && (
+            <p className="text-xs text-green-600">Thank you for your feedback!</p>
+          )}
+          {feedbackStatus === 'error' && (
+            <p className="text-xs text-red-600">Failed to send feedback. Please try again.</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -99,6 +174,40 @@ function EmailIcon({ className }: { className?: string }) {
     >
       <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
       <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+    </svg>
+  );
+}
+
+function LanguageIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+    >
+      <path
+        fillRule="evenodd"
+        d="M9 2.25a.75.75 0 01.75.75v1.506a49.38 49.38 0 015.343.371.75.75 0 11-.186 1.489c-.66-.083-1.323-.151-1.99-.206a18.67 18.67 0 01-2.969 6.323c.317.384.65.753.998 1.107a.75.75 0 11-1.07 1.052A18.902 18.902 0 019 13.687a18.823 18.823 0 01-5.656 4.482.75.75 0 11-.688-1.333 17.323 17.323 0 005.396-4.353A18.72 18.72 0 015.89 8.598a.75.75 0 011.388-.568A17.21 17.21 0 009 11.224a17.17 17.17 0 002.391-5.165 48.038 48.038 0 00-8.298.307.75.75 0 01-.186-1.489 49.159 49.159 0 015.343-.371V3A.75.75 0 019 2.25zM15.75 9a.75.75 0 01.68.433l5.25 11.25a.75.75 0 01-1.36.634l-1.198-2.567h-6.744l-1.198 2.567a.75.75 0 01-1.36-.634l5.25-11.25A.75.75 0 0115.75 9zm-2.672 8.25h5.344l-2.672-5.726-2.672 5.726z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
+function FeedbackIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+    >
+      <path
+        fillRule="evenodd"
+        d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H7.5z"
+        clipRule="evenodd"
+      />
     </svg>
   );
 }

@@ -1,0 +1,57 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs (will be generated in container)
+**/dist
+
+# Git
+.git
+.gitignore
+
+# IDE and editors
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files (handled separately)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+**/test
+**/tests
+**/__tests__
+coverage
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Deploy scripts (not needed in container)
+deploy/*.sh
+
+# Development files
+.eslintrc*
+.prettierrc*
+tsconfig*.json
+vitest.config.*
