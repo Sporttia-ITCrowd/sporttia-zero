@@ -341,6 +341,38 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
               case 'confirm_configuration': {
                 const data = funcCall.data as { confirmed: boolean };
                 await conversationRepository.setConfirmed(conversationId, data.confirmed);
+
+                // Auto-trigger sports center creation when confirmed
+                // This ensures creation happens even if AI doesn't call create_sports_center
+                if (data.confirmed) {
+                  logger.info({ conversationId }, 'Auto-triggering sports center creation after confirmation');
+
+                  const creationResult = await createSportsCenterFromConversation(conversationId);
+
+                  funcCall.result = {
+                    success: creationResult.success,
+                    sporttiaId: creationResult.sportsCenter?.sporttiaId,
+                    name: creationResult.sportsCenter?.name,
+                    adminEmail: creationResult.sportsCenter?.adminEmail,
+                    error: creationResult.error?.message,
+                  };
+
+                  if (creationResult.success) {
+                    logger.info(
+                      {
+                        conversationId,
+                        sporttiaId: creationResult.sportsCenter?.sporttiaId,
+                        name: creationResult.sportsCenter?.name,
+                      },
+                      'Sports center created successfully via auto-trigger'
+                    );
+                  } else {
+                    logger.error(
+                      { conversationId, error: creationResult.error },
+                      'Sports center creation failed via auto-trigger'
+                    );
+                  }
+                }
                 break;
               }
 
