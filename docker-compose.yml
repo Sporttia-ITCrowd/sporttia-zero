@@ -5,8 +5,7 @@ services:
       dockerfile: apps/api/Dockerfile
     container_name: sporttia-zero-api
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    network_mode: host
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -18,8 +17,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    networks:
-      - sporttia-network
 
   web:
     build:
