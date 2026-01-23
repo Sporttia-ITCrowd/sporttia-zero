@@ -9,10 +9,12 @@ import { ConversationDetailPage } from './pages/ConversationDetailPage';
 import { ErrorsPage } from './pages/ErrorsPage';
 import { FeedbacksPage } from './pages/FeedbacksPage';
 
+const basename = import.meta.env.PROD ? '/backoffice' : '/';
+
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <Routes>
           {/* Public route: Login */}
           <Route path="/login" element={<LoginPage />} />

@@ -5,6 +5,7 @@ import packageJson from './package.json';
 
 export default defineConfig({
   plugins: [react()],
+  base: process.env.NODE_ENV === 'production' ? '/backoffice/' : '/',
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version),
   },
