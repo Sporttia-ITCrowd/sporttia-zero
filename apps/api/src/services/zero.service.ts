@@ -377,8 +377,8 @@ async function createFacility(
     const [priceResult] = await conn.execute<ResultSetHeader>(
       `INSERT INTO price (
         name, duration1, price1, field_id, sportcenter_id, sc_owner_id,
-        individual, light, position, deleted
-      ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0, 0)`,
+        individual, position, deleted
+      ) VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0)`,
       [facilityName, duration, rate, fieldId, sportcenterId, sportcenterId]
     );
     priceId = priceResult.insertId;
