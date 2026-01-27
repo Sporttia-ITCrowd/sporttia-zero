@@ -286,8 +286,32 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
             );
 
             switch (funcCall.name) {
+              case 'lookup_city': {
+                // lookup_city is informational - the AI uses the results to guide the conversation
+                // No database update needed here, just log it
+                const data = funcCall.data as {
+                  query: string;
+                  countryHint?: string;
+                  candidates: Array<{
+                    placeId: string;
+                    name: string;
+                    country: string;
+                    countryCode: string;
+                  }>;
+                };
+                logger.info(
+                  {
+                    conversationId,
+                    query: data.query,
+                    candidatesCount: data.candidates?.length ?? 0,
+                  },
+                  'City lookup performed'
+                );
+                break;
+              }
+
               case 'collect_sports_center_info': {
-                const data = funcCall.data as { name?: string; city?: string; country?: string };
+                const data = funcCall.data as { name?: string; city?: string; country?: string; placeId?: string };
                 await conversationRepository.updateSportsCenterInfo(conversationId, data);
                 break;
               }
@@ -340,11 +364,63 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
 
               case 'confirm_configuration': {
                 const data = funcCall.data as { confirmed: boolean };
-                await conversationRepository.setConfirmed(conversationId, data.confirmed);
 
                 // Auto-trigger sports center creation when confirmed
                 // This ensures creation happens even if AI doesn't call create_sports_center
                 if (data.confirmed) {
+                  // First, validate that all required data is present
+                  const readiness = await conversationRepository.getConfigurationReadiness(conversationId);
+
+                  if (!readiness || !readiness.isReady) {
+                    const missingFields = readiness?.missing || ['unknown'];
+                    logger.warn(
+                      { conversationId, missing: missingFields },
+                      'Cannot confirm - configuration incomplete'
+                    );
+
+                    // Don't set confirmed=true if data is incomplete
+                    funcCall.result = {
+                      success: false,
+                      error: `Cannot confirm: missing required data: ${missingFields.join(', ')}`,
+                      missingFields,
+                    };
+
+                    // Record the error for tracking
+                    await conversationRepository.recordError(conversationId, {
+                      code: 'INCOMPLETE_DATA',
+                      message: `Configuration incomplete - missing: ${missingFields.join(', ')}`,
+                    });
+
+                    // IMPORTANT: Generate a follow-up AI response to inform the user about missing data
+                    // This prevents the confirmation loop where AI keeps asking for confirmation
+                    const incompleteContext = `SYSTEM: The confirmation FAILED because the following required data is missing: ${missingFields.join(', ')}. DO NOT ask for confirmation again. Instead, ask the user to provide the missing information: ${missingFields.join(', ')}. Once they provide it, you can show the summary and ask for confirmation again.`;
+                    conversationHistory.push({
+                      role: 'system',
+                      content: incompleteContext,
+                    });
+
+                    // Make a follow-up AI call to generate the appropriate response
+                    logger.info({ conversationId, missingFields }, 'Generating response for incomplete configuration');
+                    const incompleteResponse = await generateAIResponse({
+                      messages: conversationHistory,
+                      language: conversation.language,
+                      languageDetected: true,
+                      isFirstMessage: false,
+                      conversationId,
+                      availableSports,
+                    });
+
+                    // Use the incomplete response content
+                    aiResult.content = incompleteResponse.content;
+                    aiResult.usage.promptTokens += incompleteResponse.usage.promptTokens;
+                    aiResult.usage.completionTokens += incompleteResponse.usage.completionTokens;
+                    aiResult.usage.totalTokens += incompleteResponse.usage.totalTokens;
+
+                    break;
+                  }
+
+                  // Data is complete, now set confirmed and trigger creation
+                  await conversationRepository.setConfirmed(conversationId, true);
                   logger.info({ conversationId }, 'Auto-triggering sports center creation after confirmation');
 
                   const creationResult = await createSportsCenterFromConversation(conversationId);
@@ -371,7 +447,16 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
                       { conversationId, error: creationResult.error },
                       'Sports center creation failed via auto-trigger'
                     );
+
+                    // Record the creation error for tracking
+                    await conversationRepository.recordError(conversationId, {
+                      code: creationResult.error?.code || 'CREATION_FAILED',
+                      message: creationResult.error?.message || 'Unknown error during creation',
+                    });
                   }
+                } else {
+                  // User declined confirmation
+                  await conversationRepository.setConfirmed(conversationId, false);
                 }
                 break;
               }

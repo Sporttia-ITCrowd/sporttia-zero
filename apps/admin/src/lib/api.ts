@@ -400,6 +400,35 @@ export const api = {
     );
   },
 
+  // Create sports center from a confirmed conversation
+  async createSportsCenter(conversationId: string): Promise<{
+    success: boolean;
+    sportsCenter?: {
+      id: string;
+      sporttiaId: number;
+      name: string;
+      adminEmail: string;
+      adminLogin?: string;
+    };
+    message: string;
+  }> {
+    return apiFetch<{
+      success: boolean;
+      sportsCenter?: {
+        id: string;
+        sporttiaId: number;
+        name: string;
+        adminEmail: string;
+        adminLogin?: string;
+      };
+      message: string;
+    }>(
+      `/admin/conversations/${conversationId}/create-sports-center`,
+      { method: 'POST' },
+      true
+    );
+  },
+
   // Get dashboard metrics
   async getMetrics(params: MetricsParams = {}): Promise<MetricsResponse> {
     const searchParams = new URLSearchParams();

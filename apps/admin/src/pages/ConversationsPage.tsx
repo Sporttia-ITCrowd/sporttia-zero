@@ -8,6 +8,16 @@ import {
   ApiError,
 } from '../lib/api';
 
+// Get native language name using Intl API
+function getLanguageName(code: string): string {
+  try {
+    const displayNames = new Intl.DisplayNames([code], { type: 'language' });
+    return displayNames.of(code) || code;
+  } catch {
+    return code;
+  }
+}
+
 // Status badge component
 function StatusBadge({ status }: { status: ConversationStatus }) {
   const styles: Record<ConversationStatus, string> = {
@@ -406,8 +416,8 @@ export function ConversationsPage() {
                           <StatusBadge status={conversation.status} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-900 uppercase">
-                            {conversation.language || '-'}
+                          <span className="text-sm text-gray-900">
+                            {conversation.language ? getLanguageName(conversation.language) : '-'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

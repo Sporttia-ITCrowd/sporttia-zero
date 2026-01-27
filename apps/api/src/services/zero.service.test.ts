@@ -88,11 +88,17 @@ describe('ZeroService', () => {
     let insertIdCounter = 1;
 
     const defaultResponses: Record<string, () => unknown> = {
+      // City lookup with fuzzy matching (city-lookup.service) - not found
+      'FROM city c': () => [[], undefined],
+      // Country lookup
+      'SELECT id FROM country': () => [[], undefined],
+      // Country insert
+      'INSERT INTO country': () => [{ insertId: insertIdCounter++, affectedRows: 1 }, undefined],
       // Province lookup - not found
       'SELECT id FROM province': () => [[], undefined],
       // Province insert
       'INSERT INTO province': () => [{ insertId: insertIdCounter++, affectedRows: 1 }, undefined],
-      // City lookup - not found
+      // City lookup - not found (legacy pattern)
       'SELECT id FROM city': () => [[], undefined],
       // City insert
       'INSERT INTO city': () => [{ insertId: insertIdCounter++, affectedRows: 1 }, undefined],
@@ -178,38 +184,67 @@ describe('ZeroService', () => {
       expect(mockConnection.rollback).not.toHaveBeenCalled();
     });
 
-    it('should reuse existing province if found', async () => {
+    it('should reuse existing province if city found with province', async () => {
+      const existingCityId = 99;
       const existingProvinceId = 42;
       setupMockExecute({
-        'SELECT id FROM province': () => [[{ id: existingProvinceId }], undefined],
+        // City lookup with fuzzy matching returns a match (which includes province)
+        'FROM city c': () => [
+          [
+            {
+              cityId: existingCityId,
+              cityName: 'Madrid',
+              provinceId: existingProvinceId,
+              provinceName: 'Madrid',
+              countryId: null,
+              countryCode: null,
+              countryName: null,
+            },
+          ],
+          undefined,
+        ],
       });
 
       const request = createValidRequest();
       await createSportsCenter(request);
 
-      // Should have selected province but not inserted
+      // When city is found, province should not be inserted
       const provinceCalls = mockConnection.execute.mock.calls.filter(
-        (call) => (call[0] as string).includes('FROM province') || (call[0] as string).includes('INTO province')
+        (call) => (call[0] as string).includes('INTO province')
       );
-      expect(provinceCalls.some((call) => (call[0] as string).includes('SELECT'))).toBe(true);
       expect(provinceCalls.filter((call) => (call[0] as string).includes('INSERT')).length).toBe(0);
     });
 
     it('should reuse existing city if found', async () => {
       const existingCityId = 99;
+      const existingProvinceId = 42;
       setupMockExecute({
-        'SELECT id FROM city': () => [[{ id: existingCityId }], undefined],
+        // City lookup with fuzzy matching returns a match
+        'FROM city c': () => [
+          [
+            {
+              cityId: existingCityId,
+              cityName: 'Madrid',
+              provinceId: existingProvinceId,
+              provinceName: 'Madrid',
+              countryId: null,
+              countryCode: null,
+              countryName: null,
+            },
+          ],
+          undefined,
+        ],
       });
 
       const request = createValidRequest();
       await createSportsCenter(request);
 
-      // Should have selected city but not inserted
+      // Should have looked up city but not inserted (city lookup uses SELECT...FROM city c)
       const cityCalls = mockConnection.execute.mock.calls.filter(
         (call) => (call[0] as string).includes('FROM city') || (call[0] as string).includes('INTO city')
       );
-      expect(cityCalls.some((call) => (call[0] as string).includes('SELECT'))).toBe(true);
-      expect(cityCalls.filter((call) => (call[0] as string).includes('INSERT')).length).toBe(0);
+      expect(cityCalls.some((call) => (call[0] as string).includes('SELECT') || (call[0] as string).includes('FROM city c'))).toBe(true);
+      expect(cityCalls.filter((call) => (call[0] as string).includes('INSERT INTO city')).length).toBe(0);
     });
 
     it('should create multiple facilities', async () => {

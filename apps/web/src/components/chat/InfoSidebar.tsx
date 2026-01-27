@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../../lib/api';
+import { APP_VERSION } from '../../lib/constants';
 
 interface InfoCardProps {
   icon: React.ReactNode;
@@ -15,14 +16,15 @@ function InfoCard({ icon, children }: InfoCardProps) {
   );
 }
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  es: 'Español',
-  en: 'English',
-  pt: 'Português',
-  fr: 'Français',
-  de: 'Deutsch',
-  it: 'Italiano',
-};
+// Get native language name using Intl API
+function getLanguageName(code: string): string {
+  try {
+    const displayNames = new Intl.DisplayNames([code], { type: 'language' });
+    return displayNames.of(code) || code;
+  } catch {
+    return code;
+  }
+}
 
 interface InfoSidebarProps {
   language?: string | null;
@@ -30,7 +32,7 @@ interface InfoSidebarProps {
 }
 
 export function InfoSidebar({ language, conversationId }: InfoSidebarProps) {
-  const languageName = language ? LANGUAGE_NAMES[language] || language : null;
+  const languageName = language ? getLanguageName(language) : null;
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
@@ -125,6 +127,11 @@ export function InfoSidebar({ language, conversationId }: InfoSidebarProps) {
             <p className="text-xs text-red-600">Failed to send feedback. Please try again.</p>
           )}
         </div>
+      </div>
+
+      {/* Version */}
+      <div className="mt-auto pt-4 text-center">
+        <span className="text-[10px] text-muted-foreground/50">v{APP_VERSION}</span>
       </div>
     </div>
   );

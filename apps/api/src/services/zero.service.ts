@@ -24,6 +24,7 @@ import type {
   ZeroServiceCreateResponse,
   ZeroServiceFacilityResult,
 } from '@sporttia-zero/shared';
+import { lookupOrCreateCity, lookupByPlaceId, type CityLookupResult } from './city-lookup.service';
 
 const logger = createLogger('zero-service');
 
@@ -100,61 +101,6 @@ function mysqlTimestamp(): string {
  */
 function mysqlDate(date: Date): string {
   return date.toISOString().split('T')[0];
-}
-
-/**
- * Lookup or create a province
- */
-async function getOrCreateProvince(
-  conn: PoolConnection,
-  provinceName: string
-): Promise<number> {
-  // Try to find existing province
-  const [rows] = await conn.execute<RowDataPacket[]>(
-    'SELECT id FROM province WHERE name = ? LIMIT 1',
-    [provinceName]
-  );
-
-  if (rows.length > 0) {
-    return rows[0].id;
-  }
-
-  // Create new province
-  const [result] = await conn.execute<ResultSetHeader>(
-    `INSERT INTO province (name) VALUES (?)`,
-    [provinceName]
-  );
-
-  logger.info({ provinceName, id: result.insertId }, 'Created new province');
-  return result.insertId;
-}
-
-/**
- * Lookup or create a city
- */
-async function getOrCreateCity(
-  conn: PoolConnection,
-  cityName: string,
-  provinceId: number
-): Promise<number> {
-  // Try to find existing city in this province
-  const [rows] = await conn.execute<RowDataPacket[]>(
-    'SELECT id FROM city WHERE name = ? AND province = ? LIMIT 1',
-    [cityName, provinceId]
-  );
-
-  if (rows.length > 0) {
-    return rows[0].id;
-  }
-
-  // Create new city
-  const [result] = await conn.execute<ResultSetHeader>(
-    `INSERT INTO city (province, name) VALUES (?, ?)`,
-    [provinceId, cityName]
-  );
-
-  logger.info({ cityName, provinceId, id: result.insertId }, 'Created new city');
-  return result.insertId;
 }
 
 /**
@@ -371,7 +317,8 @@ async function createFacility(
   let priceId: number | null = null;
   if (schedules && schedules.length > 0) {
     const firstSchedule = schedules[0];
-    const duration = parseFloat(firstSchedule.duration);
+    // Convert duration from hours (string) back to minutes for the database
+    const duration = parseFloat(firstSchedule.duration) * 60;
     const rate = parseFloat(firstSchedule.rate);
 
     const [priceResult] = await conn.execute<ResultSetHeader>(
@@ -389,7 +336,8 @@ async function createFacility(
   const slotIds: number[] = [];
 
   if (schedules && schedules.length > 0) {
-    const minTime = parseFloat(schedules[0].duration);
+    // Convert duration from hours (string) back to minutes for the database
+    const minTime = parseFloat(schedules[0].duration) * 60;
     const currentYear = new Date().getFullYear();
     const dateini = `${currentYear}-01-01 00:00:00`;
     const dateend = `${currentYear + 1}-12-31 23:59:59`;
@@ -492,13 +440,43 @@ export async function createSportsCenter(
       'Starting sports center creation'
     );
 
-    // 1. Get or create province
-    const provinceId = await getOrCreateProvince(conn, request.sportcenter.city.province.name);
-    logger.debug({ provinceId }, 'Province ready');
+    // 1. Look up or create city
+    // If placeId is provided, use it for precise resolution via Google Places
+    // Otherwise, fall back to fuzzy matching for misspellings (e.g., "Madrd" → "Madrid")
+    const cityLookup: CityLookupResult = await lookupByPlaceId(
+      conn,
+      request.sportcenter.placeId, // Google Place ID if available
+      request.sportcenter.city.name,
+      request.sportcenter.city.province.name,
+      request.sportcenter.countryCode, // ISO country code if provided
+      request.language // Language for Google Places results
+    );
 
-    // 2. Get or create city
-    const cityId = await getOrCreateCity(conn, request.sportcenter.city.name, provinceId);
-    logger.debug({ cityId }, 'City ready');
+    const cityId = cityLookup.cityId;
+    const provinceId = cityLookup.provinceId;
+
+    // Log if the city name was corrected from a misspelling
+    if (cityLookup.correctedName) {
+      logger.info(
+        {
+          original: cityLookup.originalInput,
+          corrected: cityLookup.correctedName,
+        },
+        'City name was auto-corrected from misspelling'
+      );
+    }
+
+    logger.debug(
+      {
+        cityId,
+        cityName: cityLookup.cityName,
+        provinceId,
+        provinceName: cityLookup.provinceName,
+        wasCreated: cityLookup.wasCreated,
+        countryName: cityLookup.countryName,
+      },
+      'City ready'
+    );
 
     // 3. Create customer
     const customerId = await createCustomer(conn, request.sportcenter.name);

@@ -125,6 +125,8 @@ function transformToZeroServiceRequest(data: CollectedData): ZeroServiceCreateRe
           name: provinceName,
         },
       },
+      countryCode: data.country, // ISO 3166-1 alpha-2 country code (e.g., "ES", "PT", "MX")
+      placeId: data.placeId, // Google Place ID for precise city resolution
     },
     admin: {
       name: data.adminName,

@@ -10,6 +10,16 @@ import {
   ApiError,
 } from '../lib/api';
 
+// Get native language name using Intl API
+function getLanguageName(code: string): string {
+  try {
+    const displayNames = new Intl.DisplayNames([code], { type: 'language' });
+    return displayNames.of(code) || code;
+  } catch {
+    return code;
+  }
+}
+
 // Status badge component
 function StatusBadge({ status }: { status: ConversationStatus }) {
   const styles: Record<ConversationStatus, string> = {
@@ -182,6 +192,9 @@ export function ConversationDetailPage() {
   const [copied, setCopied] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState<{ success: boolean; message: string } | null>(null);
+  const [isCreatingSportsCenter, setIsCreatingSportsCenter] = useState(false);
+  const [sportsCenterCreated, setSportsCenterCreated] = useState<{ success: boolean; message: string } | null>(null);
+  const [showCreateConfirmation, setShowCreateConfirmation] = useState(false);
 
   // Load conversation detail
   const loadConversation = useCallback(async () => {
@@ -227,6 +240,29 @@ export function ConversationDetailPage() {
       setTimeout(() => setEmailSent(null), 5000);
     } finally {
       setIsSendingEmail(false);
+    }
+  };
+
+  // Create sports center
+  const handleCreateSportsCenter = async () => {
+    if (!id) return;
+
+    setShowCreateConfirmation(false);
+    setIsCreatingSportsCenter(true);
+    setSportsCenterCreated(null);
+
+    try {
+      const result = await api.createSportsCenter(id);
+      setSportsCenterCreated({ success: true, message: result.message });
+      // Reload conversation to show the new sports center
+      loadConversation();
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Failed to create sports center';
+      setSportsCenterCreated({ success: false, message });
+      // Clear the error message after 5 seconds
+      setTimeout(() => setSportsCenterCreated(null), 5000);
+    } finally {
+      setIsCreatingSportsCenter(false);
     }
   };
 
@@ -378,6 +414,36 @@ export function ConversationDetailPage() {
                 {emailSent.message}
               </span>
             )}
+            {sportsCenterCreated && (
+              <span
+                className={`text-sm ${sportsCenterCreated.success ? 'text-green-600' : 'text-red-600'}`}
+              >
+                {sportsCenterCreated.message}
+              </span>
+            )}
+            {/* Create Sports Center button */}
+            <button
+              onClick={() => setShowCreateConfirmation(true)}
+              disabled={isCreatingSportsCenter || !!sportsCenter}
+              className="inline-flex items-center px-3 py-1.5 border border-green-300 rounded-md text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {isCreatingSportsCenter ? (
+                  <svg className="mr-1.5 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                )}
+                Create Sports Center
+            </button>
             <button
               onClick={handleSendWelcomeEmail}
               disabled={isSendingEmail}
@@ -455,7 +521,7 @@ export function ConversationDetailPage() {
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Language</dt>
-                  <dd className="text-gray-900 uppercase">{conversation.language || '-'}</dd>
+                  <dd className="text-gray-900">{conversation.language ? getLanguageName(conversation.language) : '-'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Created</dt>
@@ -620,6 +686,75 @@ export function ConversationDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Confirmation Dialog for Creating Sports Center */}
+        {showCreateConfirmation && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <div className="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 text-center mb-2">
+                  Create Sports Center
+                </h3>
+                <p className="text-sm text-gray-500 text-center mb-4">
+                  Are you sure you want to create the sports center with the following data?
+                </p>
+                {collectedData && (
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4 text-sm">
+                    <dl className="space-y-1">
+                      <div className="flex justify-between">
+                        <dt className="text-gray-500">Name:</dt>
+                        <dd className="text-gray-900 font-medium">{collectedData.sportsCenterName || '-'}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-gray-500">City:</dt>
+                        <dd className="text-gray-900">{collectedData.city || '-'}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-gray-500">Admin:</dt>
+                        <dd className="text-gray-900">{collectedData.adminName || '-'}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-gray-500">Email:</dt>
+                        <dd className="text-gray-900">{collectedData.adminEmail || '-'}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-gray-500">Facilities:</dt>
+                        <dd className="text-gray-900">{collectedData.facilities.length}</dd>
+                      </div>
+                    </dl>
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 text-center mb-4">
+                  This action will create the sports center in Sporttia and send credentials to the admin.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowCreateConfirmation(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateSportsCenter}
+                    className="flex-1 px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

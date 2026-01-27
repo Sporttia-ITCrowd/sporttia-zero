@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, FeedbacksListResponse } from '../lib/api';
 
-// Language names
-const LANGUAGE_NAMES: Record<string, string> = {
-  es: 'Español',
-  en: 'English',
-  pt: 'Português',
-  fr: 'Français',
-  de: 'Deutsch',
-  it: 'Italiano',
-};
+// Get native language name using Intl API
+function getLanguageName(code: string): string {
+  try {
+    const displayNames = new Intl.DisplayNames([code], { type: 'language' });
+    return displayNames.of(code) || code;
+  } catch {
+    return code;
+  }
+}
 
 // Format timestamp
 function formatTimestamp(timestamp: string): string {
@@ -73,7 +73,7 @@ function FeedbackRow({
         <div className="flex-shrink-0 w-24">
           {feedback.language && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {LANGUAGE_NAMES[feedback.language] || feedback.language}
+              {getLanguageName(feedback.language)}
             </span>
           )}
         </div>

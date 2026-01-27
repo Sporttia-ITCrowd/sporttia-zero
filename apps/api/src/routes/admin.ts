@@ -12,6 +12,7 @@ import { db } from '../lib/db';
 import { sql } from 'kysely';
 import type { ConversationStatus, CollectedData } from '../lib/db-types';
 import { sendWelcomeEmail } from '../services/email.service';
+import { createSportsCenterFromConversation } from '../services/sports-center-creation.service';
 
 const router = Router();
 const logger = createLogger('admin-api');
@@ -934,6 +935,70 @@ router.post('/conversations/:id/send-welcome-email', requireAuth, async (req: Au
   } catch (error) {
     logger.error({ error, conversationId: req.params.id }, 'Error sending welcome email');
     sendError(res, ErrorCodes.INTERNAL_ERROR, 'Failed to send welcome email', 500);
+  }
+});
+
+/**
+ * POST /api/admin/conversations/:id/create-sports-center
+ * Create a sports center from a confirmed conversation
+ */
+router.post('/conversations/:id/create-sports-center', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const conversationId = req.params.id;
+
+    logger.info({ conversationId, userId: req.user?.id }, 'Creating sports center from admin panel');
+
+    // Get conversation to verify it exists
+    const conversation = await conversationRepository.findById(conversationId);
+    if (!conversation) {
+      return sendError(res, ErrorCodes.NOT_FOUND, 'Conversation not found', 404);
+    }
+
+    // Check if data is confirmed
+    const collectedData = conversation.collected_data;
+    if (!collectedData?.confirmed) {
+      return sendError(
+        res,
+        ErrorCodes.VALIDATION_ERROR,
+        'Configuration must be confirmed before creating sports center',
+        400
+      );
+    }
+
+    // Call the sports center creation service
+    const result = await createSportsCenterFromConversation(conversationId);
+
+    if (result.success) {
+      logger.info(
+        {
+          conversationId,
+          sporttiaId: result.sportsCenter?.sporttiaId,
+        },
+        'Sports center created successfully from admin panel'
+      );
+
+      sendSuccess(res, {
+        success: true,
+        sportsCenter: result.sportsCenter,
+        message: 'Sports center created successfully',
+      });
+    } else {
+      logger.warn(
+        { conversationId, error: result.error },
+        'Failed to create sports center from admin panel'
+      );
+
+      const statusCode = result.error?.isRetryable ? 503 : 400;
+      sendError(
+        res,
+        result.error?.code || ErrorCodes.EXTERNAL_SERVICE_ERROR,
+        result.error?.message || 'Failed to create sports center',
+        statusCode
+      );
+    }
+  } catch (error) {
+    logger.error({ error, conversationId: req.params.id }, 'Error creating sports center');
+    sendError(res, ErrorCodes.INTERNAL_ERROR, 'Failed to create sports center', 500);
   }
 });
 

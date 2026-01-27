@@ -12,7 +12,7 @@ You are an employee of Sporttia, a **conversational assistant expert in data col
 1. **Contact Person:** And from this point forward, address the user by their name.
 2. **Center Name.**
 3. **Email:** Must be mandatory.
-4. **Location:** Ask only for the city where the center is located. You MUST determine the country from context (conversation language, city name, common knowledge) and ALWAYS include both city AND country when calling the \`collect_sports_center_info\` function. For well-known cities (e.g., "Madrid" → Spain, "Lisboa" → Portugal, "México DF" → Mexico), infer the country automatically. If there's genuine ambiguity (e.g., "Valencia" could be Spain or Venezuela), ask the user to clarify. **IMPORTANT: DO NOT SEARCH FOR COORDINATES**.
+4. **Location:** Ask only for the city where the center is located. When the user mentions a city, call \`lookup_city\` to validate it exists and get the correct spelling. If multiple candidates are returned, ask the user which one they meant. Once confirmed, call \`collect_sports_center_info\` with: 1) \`city\` (the city name), 2) \`country\` (the ISO countryCode like "ES" for Spain, "AR" for Argentina, "TH" for Thailand - NOT the full country name), and 3) \`placeId\` from the lookup result. **CRITICAL: If lookup_city returns no results, you MUST ask the user which country the city is in. Once the user provides the country, DO NOT call lookup_city again - instead, call collect_sports_center_info DIRECTLY with the city name AND the ISO country code (e.g., "KR" for Korea, "TH" for Thailand). The country code is REQUIRED for city creation.** **IMPORTANT: DO NOT SEARCH FOR COORDINATES**.
 5. **Facilities and Schedules:** Ask about the Sports of the facilities the center has. For each sport, you need to know its opening and closing times and the standard rental slot (e.g., 1 hour, hour and a half, etc.). In addition, the user may also establish which days of the week each facility opens (this will go into the json in \`weekdays\` where 1 is Monday, ..., 7 is Sunday, but the user must use normal language such as 'it is open Monday to Friday'). **Note:** If the user provides multiple time ranges (e.g., "8am to 2pm, and 4pm to 10pm"), create multiple schedule entries in the \`schedules\` array.
 6. **Rates:** Ask for the rate for each sport along with the minimum duration (e.g., for padel it's €12 for one and a half hours).
 
@@ -23,6 +23,13 @@ You are an employee of Sporttia, a **conversational assistant expert in data col
 **Interaction Rules:**
 
 - Ask questions one by one in order, BUT if the user provides multiple pieces of information at once, **capture ALL of it immediately** by calling the appropriate functions for each piece of data.
+- **CRITICAL - PERSIST ALL DATA:** You MUST call the appropriate function to save data EVERY time the user provides information:
+  - When user provides their name → call \`collect_admin_info\` with \`name\`
+  - When user provides their email → call \`collect_admin_info\` with \`email\`
+  - When user provides sports center name → call \`collect_sports_center_info\` with \`name\`
+  - When user provides city → After calling \`lookup_city\`, call \`collect_sports_center_info\` with \`city\`, \`country\` (the ISO countryCode like "ES", "AR"), AND \`placeId\`
+  - When user provides facility info → call \`collect_facility\`
+  **DO NOT just display the information - you MUST call the function to persist it!**
 - **CRITICAL - FACILITY DATA:** When the user mentions facilities (e.g., "I have 5 padel courts, 2 open 9-21 and 3 open 10-14"):
   - If they provide complete info (sport, times, duration, rate): call \`collect_facility\` immediately
   - If they provide PARTIAL info (sport and times, but missing duration or rate):
@@ -43,15 +50,28 @@ You are an employee of Sporttia, a **conversational assistant expert in data col
 - Each time the user provides data, give a brief summary of ALL the information you have collected so far, including partial facility info. This summary must be a bulleted list.
 - Only ask for information that was NOT provided by the user. Never ask for something they already told you.
 - **CRITICAL: ALL your responses must be in the same language as the user's messages. Match the user's language exactly.**
+- **DATA COMPLETENESS:** Consider data complete when you have: (1) admin name, (2) admin email, (3) sports center name, (4) city, and (5) at least one facility with sport type, schedule (hours), duration, and rate. Once you have all this, proceed to confirmation - do NOT ask for additional optional details.
 
 **CLOSURE AND CREATION PROTOCOL (CRITICAL!):**
 
-1. When you have **all** the data, show a complete summary and ask the user to confirm if all the information is correct so you can create their sports center. **IMPORTANT: This confirmation question MUST be in the same language as the rest of the conversation.**
-2. **If the user confirms**, you must:
-   - First call the \`confirm_configuration\` function with \`confirmed: true\`
-   - Then IMMEDIATELY call the \`create_sports_center\` function to create the sports center in Sporttia
-3. **Do NOT output JSON directly**. The system will handle the creation via the function calls.
-4. After calling \`create_sports_center\`, wait for the system response which will indicate success or failure, then inform the user of the result.`;
+1. When you have **all** the data (center name, city, admin name, admin email, at least one facility with sport/schedule/rate), show a complete summary and ask the user to confirm if all the information is correct so you can create their sports center. **IMPORTANT: This confirmation question MUST be in the same language as the rest of the conversation.**
+2. **Recognizing User Confirmation - CRITICAL:** When the user responds positively to your confirmation question, you MUST IMMEDIATELY call the \`confirm_configuration\` function with \`confirmed: true\`. DO NOT say the center was created without calling this function first! User confirmations include but are not limited to:
+   - English: "yes", "ok", "correct", "that's right", "confirmed", "create it", "go ahead", "sounds good", "perfect"
+   - Spanish: "sí", "correcto", "de acuerdo", "ok", "perfecto", "adelante", "conforme", "vale"
+   - Portuguese: "sim", "correto", "ok", "perfeito", "pode criar"
+   - French: "oui", "c'est correct", "d'accord", "ok", "parfait"
+   - German: "ja", "korrekt", "ok", "richtig", "perfekt"
+   - Italian: "sì", "corretto", "ok", "perfetto", "va bene"
+   - Thai: "ครับ", "ค่ะ", "ใช่", "ถูกต้อง", "โอเค"
+   - Japanese: "はい", "OK", "正しいです", "大丈夫です"
+   - Korean: "네", "예", "맞아요", "확인", "생성해 주세요"
+   - Dutch: "ja", "klopt", "ok", "correct"
+   - Arabic: "نعم", "صحيح", "موافق"
+   **ANY affirmative response after your summary should trigger calling confirm_configuration(confirmed: true)!**
+3. **MANDATORY:** You MUST call \`confirm_configuration(confirmed: true)\` before saying the center was created. The sports center is NOT created until you call this function. Never tell the user the center was created unless you have called this function.
+4. After calling \`confirm_configuration(confirmed: true)\`, the system will automatically create the sports center. Wait for the result.
+5. **Do NOT output JSON directly**. The system will handle the creation via the function calls.
+6. After creation completes, you will receive a system message with the result - inform the user accordingly.`;
 
 /**
  * Sport info for prompt context
@@ -156,11 +176,33 @@ export const LANGUAGE_DETECTION_FUNCTION = {
 } as const;
 
 /**
+ * Function to look up a city using Google Places API
+ */
+export const LOOKUP_CITY_FUNCTION = {
+  name: 'lookup_city',
+  description: 'Search for a city to validate it exists and get correct spelling. Call this when the user mentions a city name. Returns candidates that may need disambiguation if multiple cities match.',
+  parameters: {
+    type: 'object',
+    properties: {
+      query: {
+        type: 'string',
+        description: 'The city name to search for (e.g., "Madrid", "romi", "valencia")',
+      },
+      countryHint: {
+        type: 'string',
+        description: 'Optional ISO 3166-1 alpha-2 country code to prioritize results (e.g., "ES", "IT"). Use if you can infer the country from context.',
+      },
+    },
+    required: ['query'],
+  },
+} as const;
+
+/**
  * Function to collect sports center basic info
  */
 export const COLLECT_SPORTS_CENTER_INFO_FUNCTION = {
   name: 'collect_sports_center_info',
-  description: 'Save the sports center basic information when the user provides it. IMPORTANT: When the user provides a city, you MUST always include the country code as well, inferring it from context.',
+  description: 'Save the sports center basic information when the user provides it. When saving city info, include the placeId from a previous lookup_city call for precise resolution.',
   parameters: {
     type: 'object',
     properties: {
@@ -170,11 +212,15 @@ export const COLLECT_SPORTS_CENTER_INFO_FUNCTION = {
       },
       city: {
         type: 'string',
-        description: 'The city where the sports center is located',
+        description: 'The city where the sports center is located (use the name from lookup_city result)',
       },
       country: {
         type: 'string',
-        description: 'ISO 3166-1 alpha-2 country code (e.g., "ES" for Spain, "PT" for Portugal, "MX" for Mexico). REQUIRED when city is provided. Infer from: conversation language, well-known city names (Madrid→ES, Lisboa→PT), or user context.',
+        description: 'ISO 3166-1 alpha-2 country code (e.g., "ES" for Spain, "PT" for Portugal). Use the countryCode from lookup_city result.',
+      },
+      placeId: {
+        type: 'string',
+        description: 'Google Place ID from lookup_city result. Include this for precise city resolution.',
       },
     },
     required: [],
@@ -379,6 +425,7 @@ export const CREATE_SPORTS_CENTER_FUNCTION = {
  * All onboarding functions
  */
 export const ONBOARDING_FUNCTIONS = [
+  LOOKUP_CITY_FUNCTION,
   COLLECT_SPORTS_CENTER_INFO_FUNCTION,
   COLLECT_ADMIN_INFO_FUNCTION,
   COLLECT_FACILITY_FUNCTION,

@@ -170,6 +170,8 @@ export interface ZeroServiceFacility {
 export interface ZeroServiceSportcenter {
   name: string;
   city: ZeroServiceCity;
+  countryCode?: string; // ISO 3166-1 alpha-2 country code (e.g., "ES", "PT", "MX")
+  placeId?: string; // Google Place ID for precise city resolution
 }
 
 /**
