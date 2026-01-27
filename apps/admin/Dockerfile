@@ -17,7 +17,7 @@ COPY apps/admin ./apps/admin
 
 # Build shared package first, then admin
 RUN npm run build -w @sporttia-zero/shared
-RUN npm run build -w @sporttia-zero/admin
+RUN NODE_ENV=production npm run build -w @sporttia-zero/admin
 
 # Production stage with nginx
 FROM nginx:alpine AS production
