@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 
 interface MessageInputProps {
@@ -10,10 +11,12 @@ interface MessageInputProps {
 export function MessageInput({
   onSend,
   disabled = false,
-  placeholder = 'Type your message...',
+  placeholder,
 }: MessageInputProps) {
+  const { t } = useTranslation();
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const defaultPlaceholder = placeholder || t('chat.placeholder');
 
   // Focus input on mount and when it becomes enabled
   useEffect(() => {
@@ -52,7 +55,7 @@ export function MessageInput({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={placeholder}
+            placeholder={defaultPlaceholder}
             disabled={disabled}
             className={cn(
               'w-full rounded-full border border-border bg-white px-5 py-3',
@@ -75,7 +78,7 @@ export function MessageInput({
             'disabled:pointer-events-none disabled:opacity-50',
             'transition-colors shadow-md'
           )}
-          aria-label="Send message"
+          aria-label={t('chat.sendMessage')}
         >
           <SendIcon className="h-5 w-5" />
         </button>

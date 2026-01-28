@@ -1,0 +1,56 @@
+{
+  "welcome": {
+    "title": "Benvenuto in Sporttia ZERO",
+    "description": "Ti aiutero a configurare il tuo centro sportivo passo dopo passo. Ti chiedero:",
+    "item1": "Il tuo nome e email di contatto",
+    "item2": "Nome e posizione del centro sportivo",
+    "item3": "Strutture e i loro orari",
+    "item4": "Tariffe per ogni sport",
+    "cta": "Scrivi un messaggio per iniziare la conversazione."
+  },
+  "header": {
+    "newConversation": "Nuova conversazione"
+  },
+  "status": {
+    "loading": "Caricamento",
+    "sending": "Invio",
+    "error": "Errore",
+    "connected": "Connesso"
+  },
+  "resetDialog": {
+    "title": "Iniziare una nuova conversazione?",
+    "description": "Questo cancellera la conversazione attuale e ricomincera da zero. Questa azione non puo essere annullata.",
+    "cancel": "Annulla",
+    "confirm": "Inizia nuova"
+  },
+  "error": {
+    "dismiss": "Chiudi"
+  },
+  "chat": {
+    "initializing": "Inizializzazione conversazione...",
+    "placeholder": "Scrivi il tuo messaggio...",
+    "placeholderInitializing": "Inizializzazione...",
+    "placeholderSending": "Invio...",
+    "placeholderCompleted": "Conversazione completata",
+    "sendMessage": "Invia messaggio"
+  },
+  "sidebar": {
+    "info": "Questo assistente ti permette di creare un centro sportivo di base. Tieni presente che Sporttia ha molti altri moduli per gestire membri, pagamenti con carta, attivita, tornei, ecc.",
+    "salesContact": "Se preferisci contattare un rappresentante commerciale, puoi scriverci a",
+    "language": "Lingua",
+    "feedbackTitle": "Condividi il tuo feedback su questo assistente:",
+    "feedbackPlaceholder": "Scrivi qui il tuo feedback...",
+    "feedbackSend": "Invia",
+    "feedbackSending": "Invio...",
+    "feedbackSuccess": "Grazie per il tuo feedback!",
+    "feedbackError": "Invio fallito. Riprova."
+  },
+  "rating": {
+    "title": "Aiutaci a migliorare",
+    "subtitle": "Valuta la tua esperienza",
+    "commentPlaceholder": "Commenti aggiuntivi (opzionale)",
+    "submit": "Invia",
+    "skip": "Salta",
+    "thanks": "Grazie per la tua valutazione"
+  }
+}

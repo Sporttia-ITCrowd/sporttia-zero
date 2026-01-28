@@ -1,0 +1,56 @@
+{
+  "welcome": {
+    "title": "Bem-vindo ao Sporttia ZERO",
+    "description": "Vou ajuda-lo a configurar seu centro esportivo passo a passo. Vou pedir:",
+    "item1": "Seu nome e email de contato",
+    "item2": "Nome e localizacao do centro esportivo",
+    "item3": "Instalacoes e seus horarios",
+    "item4": "Tarifas para cada esporte",
+    "cta": "Digite uma mensagem para iniciar a conversa."
+  },
+  "header": {
+    "newConversation": "Nova conversa"
+  },
+  "status": {
+    "loading": "Carregando",
+    "sending": "Enviando",
+    "error": "Erro",
+    "connected": "Conectado"
+  },
+  "resetDialog": {
+    "title": "Iniciar nova conversa?",
+    "description": "Isso apagara a conversa atual e comecara do zero. Esta acao nao pode ser desfeita.",
+    "cancel": "Cancelar",
+    "confirm": "Iniciar nova"
+  },
+  "error": {
+    "dismiss": "Fechar"
+  },
+  "chat": {
+    "initializing": "Iniciando conversa...",
+    "placeholder": "Digite sua mensagem...",
+    "placeholderInitializing": "Iniciando...",
+    "placeholderSending": "Enviando...",
+    "placeholderCompleted": "Conversa concluida",
+    "sendMessage": "Enviar mensagem"
+  },
+  "sidebar": {
+    "info": "Este assistente permite criar um centro esportivo basico. Lembre-se de que o Sporttia tem muitos outros modulos para gerenciar membros, pagamentos com cartao, atividades, torneios, etc.",
+    "salesContact": "Se preferir entrar em contato com um representante de vendas, pode nos escrever em",
+    "language": "Idioma",
+    "feedbackTitle": "Compartilhe sua opiniao sobre este assistente:",
+    "feedbackPlaceholder": "Escreva sua opiniao aqui...",
+    "feedbackSend": "Enviar",
+    "feedbackSending": "Enviando...",
+    "feedbackSuccess": "Obrigado pela sua opiniao!",
+    "feedbackError": "Falha ao enviar. Por favor, tente novamente."
+  },
+  "rating": {
+    "title": "Ajude-nos a melhorar",
+    "subtitle": "Avalie sua experiencia",
+    "commentPlaceholder": "Comentarios adicionais (opcional)",
+    "submit": "Enviar",
+    "skip": "Pular",
+    "thanks": "Obrigado pela sua avaliacao"
+  }
+}

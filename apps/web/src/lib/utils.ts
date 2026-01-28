@@ -23,17 +23,20 @@ export function getOrCreateSessionId(): string {
   return sessionId;
 }
 
-// Supported languages for Sporttia ZERO
-const SUPPORTED_LANGUAGES = ['es', 'en', 'pt', 'fr', 'de', 'it'] as const;
-type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+// Supported languages for Sporttia ZERO conversation detection
+const SUPPORTED_LANGUAGES = ['en', 'es', 'fr', 'de', 'nl', 'pt', 'pl', 'it'] as const;
+type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 /**
  * Detect user's browser language and return ISO-639-1 code
- * Falls back to 'es' (Spanish) if language is not supported
+ * Falls back to 'en' (English) if language is not supported
  */
 export function getBrowserLanguage(): SupportedLanguage {
   // Get browser language (e.g., 'en-US', 'es', 'pt-BR')
-  const browserLang = navigator.language || (navigator as { userLanguage?: string }).userLanguage || 'es';
+  const browserLang =
+    navigator.language ||
+    (navigator as { userLanguage?: string }).userLanguage ||
+    'en';
 
   // Extract the primary language code (e.g., 'en' from 'en-US')
   const primaryLang = browserLang.split('-')[0].toLowerCase();
@@ -43,6 +46,6 @@ export function getBrowserLanguage(): SupportedLanguage {
     return primaryLang as SupportedLanguage;
   }
 
-  // Default to Spanish
-  return 'es';
+  // Default to English
+  return 'en';
 }

@@ -453,6 +453,45 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
                       code: creationResult.error?.code || 'CREATION_FAILED',
                       message: creationResult.error?.message || 'Unknown error during creation',
                     });
+
+                    // For non-retryable errors (like duplicate email), reset confirmed
+                    // so the user can change the data and try again
+                    if (!creationResult.error?.isRetryable) {
+                      await conversationRepository.setConfirmed(conversationId, false);
+                      logger.info(
+                        { conversationId, errorCode: creationResult.error?.code },
+                        'Reset confirmed=false due to non-retryable error'
+                      );
+                    }
+
+                    // Inject error context for AI response - provide specific guidance for duplicate email
+                    let errorContext: string;
+                    if (creationResult.error?.code === 'DUPLICATE_EMAIL') {
+                      errorContext = `SYSTEM: Sports center creation failed because the email address is already registered in Sporttia. Ask the user to provide a DIFFERENT email address. Once they provide a new email, collect it and show the updated configuration summary for confirmation.`;
+                    } else {
+                      errorContext = `SYSTEM: Sports center creation failed. Error: ${creationResult.error?.message}. Retryable: ${creationResult.error?.isRetryable}. Help the user understand what happened and what to do next.`;
+                    }
+                    conversationHistory.push({
+                      role: 'system',
+                      content: errorContext,
+                    });
+
+                    // Make a follow-up AI call to generate the error response
+                    logger.info({ conversationId }, 'Generating error response for confirmation failure');
+                    const errorResponse = await generateAIResponse({
+                      messages: conversationHistory,
+                      language: conversation.language,
+                      languageDetected: true,
+                      isFirstMessage: false,
+                      conversationId,
+                      availableSports,
+                    });
+
+                    // Use the error response content
+                    aiResult.content = errorResponse.content;
+                    aiResult.usage.promptTokens += errorResponse.usage.promptTokens;
+                    aiResult.usage.completionTokens += errorResponse.usage.completionTokens;
+                    aiResult.usage.totalTokens += errorResponse.usage.totalTokens;
                   }
                 } else {
                   // User declined confirmation
@@ -543,8 +582,23 @@ router.post('/:id/messages', async (req: Request, res: Response) => {
                     message: creationResult.error?.message || 'Unknown error during creation',
                   });
 
-                  // Inject error context for follow-up
-                  const errorContext = `SYSTEM: Sports center creation failed. Error: ${creationResult.error?.message}. Retryable: ${creationResult.error?.isRetryable}. Help the user understand what happened and what to do next.`;
+                  // For non-retryable errors (like duplicate email), reset confirmed
+                  // so the user can change the data and try again
+                  if (!creationResult.error?.isRetryable) {
+                    await conversationRepository.setConfirmed(conversationId, false);
+                    logger.info(
+                      { conversationId, errorCode: creationResult.error?.code },
+                      'Reset confirmed=false due to non-retryable error'
+                    );
+                  }
+
+                  // Inject error context for follow-up - provide specific guidance for duplicate email
+                  let errorContext: string;
+                  if (creationResult.error?.code === 'DUPLICATE_EMAIL') {
+                    errorContext = `SYSTEM: Sports center creation failed because the email address is already registered in Sporttia. Ask the user to provide a DIFFERENT email address. Once they provide a new email, collect it and show the updated configuration summary for confirmation.`;
+                  } else {
+                    errorContext = `SYSTEM: Sports center creation failed. Error: ${creationResult.error?.message}. Retryable: ${creationResult.error?.isRetryable}. Help the user understand what happened and what to do next.`;
+                  }
                   conversationHistory.push({
                     role: 'system',
                     content: errorContext,

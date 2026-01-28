@@ -1,0 +1,56 @@
+{
+  "welcome": {
+    "title": "Witamy w Sporttia ZERO",
+    "description": "Pomoge Ci krok po kroku skonfigurowac Twoj osrodek sportowy. Zapytam Cie o:",
+    "item1": "Twoje imie i email kontaktowy",
+    "item2": "Nazwe i lokalizacje osrodka sportowego",
+    "item3": "Obiekty i ich harmonogramy",
+    "item4": "Ceny dla kazdego sportu",
+    "cta": "Wpisz wiadomosc, aby rozpoczac rozmowe."
+  },
+  "header": {
+    "newConversation": "Nowa rozmowa"
+  },
+  "status": {
+    "loading": "Ladowanie",
+    "sending": "Wysylanie",
+    "error": "Blad",
+    "connected": "Polaczono"
+  },
+  "resetDialog": {
+    "title": "Rozpoczac nowa rozmowe?",
+    "description": "Spowoduje to usuniecie biezacej rozmowy i rozpoczecie od nowa. Tej czynnosci nie mozna cofnac.",
+    "cancel": "Anuluj",
+    "confirm": "Rozpocznij nowa"
+  },
+  "error": {
+    "dismiss": "Zamknij"
+  },
+  "chat": {
+    "initializing": "Inicjowanie rozmowy...",
+    "placeholder": "Wpisz wiadomosc...",
+    "placeholderInitializing": "Inicjowanie...",
+    "placeholderSending": "Wysylanie...",
+    "placeholderCompleted": "Rozmowa zakonczona",
+    "sendMessage": "Wyslij wiadomosc"
+  },
+  "sidebar": {
+    "info": "Ten asystent umozliwia utworzenie podstawowego osrodka sportowego. Pamietaj, ze Sporttia ma wiele innych modulow do zarzadzania czlonkami, platnosci karta, aktywnosciami, turniejami itp.",
+    "salesContact": "Jesli wolisz skontaktowac sie z przedstawicielem handlowym, mozesz napisac do nas na",
+    "language": "Jezyk",
+    "feedbackTitle": "Podziel sie opinia o tym asystencie:",
+    "feedbackPlaceholder": "Napisz tutaj swoja opinie...",
+    "feedbackSend": "Wyslij",
+    "feedbackSending": "Wysylanie...",
+    "feedbackSuccess": "Dziekujemy za opinie!",
+    "feedbackError": "Nie udalo sie wyslac. Sprobuj ponownie."
+  },
+  "rating": {
+    "title": "Pomoz nam sie poprawic",
+    "subtitle": "Ocen swoje doswiadczenie",
+    "commentPlaceholder": "Dodatkowe komentarze (opcjonalnie)",
+    "submit": "Wyslij",
+    "skip": "Pomin",
+    "thanks": "Dziekujemy za ocene"
+  }
+}

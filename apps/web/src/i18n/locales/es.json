@@ -1,0 +1,56 @@
+{
+  "welcome": {
+    "title": "Bienvenido a Sporttia ZERO",
+    "description": "Te ayudare a configurar tu centro deportivo paso a paso. Te pedire:",
+    "item1": "Tu nombre y email de contacto",
+    "item2": "Nombre y ubicacion del centro deportivo",
+    "item3": "Instalaciones y sus horarios",
+    "item4": "Tarifas para cada deporte",
+    "cta": "Escribe un mensaje para comenzar la conversacion."
+  },
+  "header": {
+    "newConversation": "Nueva conversacion"
+  },
+  "status": {
+    "loading": "Cargando",
+    "sending": "Enviando",
+    "error": "Error",
+    "connected": "Conectado"
+  },
+  "resetDialog": {
+    "title": "Iniciar nueva conversacion?",
+    "description": "Esto borrara la conversacion actual y comenzara de nuevo. Esta accion no se puede deshacer.",
+    "cancel": "Cancelar",
+    "confirm": "Iniciar nueva"
+  },
+  "error": {
+    "dismiss": "Cerrar"
+  },
+  "chat": {
+    "initializing": "Iniciando conversacion...",
+    "placeholder": "Escribe tu mensaje...",
+    "placeholderInitializing": "Iniciando...",
+    "placeholderSending": "Enviando...",
+    "placeholderCompleted": "Conversacion finalizada",
+    "sendMessage": "Enviar mensaje"
+  },
+  "sidebar": {
+    "info": "Este asistente te permite crear un centro deportivo basico. Ten en cuenta que Sporttia tiene muchos mas modulos para gestionar socios, pagos con tarjeta, actividades, torneos, etc.",
+    "salesContact": "Si prefieres contactar con un representante de ventas, puedes escribirnos a",
+    "language": "Idioma",
+    "feedbackTitle": "Comparte tu opinion sobre este asistente:",
+    "feedbackPlaceholder": "Escribe tu opinion aqui...",
+    "feedbackSend": "Enviar",
+    "feedbackSending": "Enviando...",
+    "feedbackSuccess": "Gracias por tu opinion!",
+    "feedbackError": "Error al enviar. Por favor, intentalo de nuevo."
+  },
+  "rating": {
+    "title": "Ayudanos a mejorar",
+    "subtitle": "Valora tu experiencia",
+    "commentPlaceholder": "Comentarios adicionales (opcional)",
+    "submit": "Enviar",
+    "skip": "Saltar",
+    "thanks": "Gracias por tu valoracion"
+  }
+}

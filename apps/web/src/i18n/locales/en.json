@@ -1,0 +1,56 @@
+{
+  "welcome": {
+    "title": "Welcome to Sporttia ZERO",
+    "description": "I'll help you configure your sports center step by step. I'll ask you for:",
+    "item1": "Your name and contact email",
+    "item2": "Sports center name and location",
+    "item3": "Facilities and their schedules",
+    "item4": "Rates for each sport",
+    "cta": "Type a message to start the conversation."
+  },
+  "header": {
+    "newConversation": "New conversation"
+  },
+  "status": {
+    "loading": "Loading",
+    "sending": "Sending",
+    "error": "Error",
+    "connected": "Connected"
+  },
+  "resetDialog": {
+    "title": "Start new conversation?",
+    "description": "This will clear the current conversation and start fresh. This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirm": "Start new"
+  },
+  "error": {
+    "dismiss": "Dismiss"
+  },
+  "chat": {
+    "initializing": "Initializing conversation...",
+    "placeholder": "Type your message...",
+    "placeholderInitializing": "Initializing...",
+    "placeholderSending": "Sending...",
+    "placeholderCompleted": "Conversation completed",
+    "sendMessage": "Send message"
+  },
+  "sidebar": {
+    "info": "This assistant allows you to create a basic sports center. Keep in mind that Sporttia has many more modules to manage members, card payments, activities, tournaments, etc.",
+    "salesContact": "If you prefer to contact a sales representative, you can write to us at",
+    "language": "Language",
+    "feedbackTitle": "Share your feedback about this assistant:",
+    "feedbackPlaceholder": "Write your feedback here...",
+    "feedbackSend": "Send",
+    "feedbackSending": "Sending...",
+    "feedbackSuccess": "Thank you for your feedback!",
+    "feedbackError": "Failed to send feedback. Please try again."
+  },
+  "rating": {
+    "title": "Help us improve",
+    "subtitle": "Rate your experience",
+    "commentPlaceholder": "Additional comments (optional)",
+    "submit": "Submit",
+    "skip": "Skip",
+    "thanks": "Thank you for your feedback"
+  }
+}

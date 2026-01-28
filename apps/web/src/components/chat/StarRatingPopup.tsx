@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../lib/utils';
 
 interface StarRatingPopupProps {
@@ -7,65 +8,6 @@ interface StarRatingPopupProps {
   onSubmit: (rating: number, comment?: string) => Promise<void>;
   language?: string | null;
 }
-
-// Translations for the popup
-const translations: Record<string, {
-  title: string;
-  subtitle: string;
-  commentPlaceholder: string;
-  submit: string;
-  skip: string;
-  thanks: string;
-}> = {
-  es: {
-    title: 'Ayudanos a mejorar',
-    subtitle: 'Valora tu experiencia',
-    commentPlaceholder: 'Comentarios adicionales (opcional)',
-    submit: 'Enviar',
-    skip: 'Saltar',
-    thanks: 'Gracias por tu valoracion',
-  },
-  en: {
-    title: 'Help us improve',
-    subtitle: 'Rate your experience',
-    commentPlaceholder: 'Additional comments (optional)',
-    submit: 'Submit',
-    skip: 'Skip',
-    thanks: 'Thank you for your feedback',
-  },
-  pt: {
-    title: 'Ajude-nos a melhorar',
-    subtitle: 'Avalie sua experiencia',
-    commentPlaceholder: 'Comentarios adicionais (opcional)',
-    submit: 'Enviar',
-    skip: 'Pular',
-    thanks: 'Obrigado pela sua avaliacao',
-  },
-  fr: {
-    title: 'Aidez-nous a ameliorer',
-    subtitle: 'Evaluez votre experience',
-    commentPlaceholder: 'Commentaires supplementaires (facultatif)',
-    submit: 'Envoyer',
-    skip: 'Passer',
-    thanks: 'Merci pour votre avis',
-  },
-  de: {
-    title: 'Helfen Sie uns zu verbessern',
-    subtitle: 'Bewerten Sie Ihre Erfahrung',
-    commentPlaceholder: 'Zusatzliche Kommentare (optional)',
-    submit: 'Senden',
-    skip: 'Uberspringen',
-    thanks: 'Danke fur Ihr Feedback',
-  },
-  it: {
-    title: 'Aiutaci a migliorare',
-    subtitle: 'Valuta la tua esperienza',
-    commentPlaceholder: 'Commenti aggiuntivi (opzionale)',
-    submit: 'Invia',
-    skip: 'Salta',
-    thanks: 'Grazie per il tuo feedback',
-  },
-};
 
 function StarIcon({ filled, hovered, onClick, onHover }: {
   filled: boolean;
@@ -100,14 +42,13 @@ function StarIcon({ filled, hovered, onClick, onHover }: {
   );
 }
 
-export function StarRatingPopup({ isOpen, onClose, onSubmit, language }: StarRatingPopupProps) {
+export function StarRatingPopup({ isOpen, onClose, onSubmit }: StarRatingPopupProps) {
+  const { t } = useTranslation();
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const t = translations[language || 'es'] || translations.es;
 
   const handleSubmit = async () => {
     if (rating === 0) return;
@@ -149,14 +90,14 @@ export function StarRatingPopup({ isOpen, onClose, onSubmit, language }: StarRat
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-lg font-medium text-gray-900">{t.thanks}</p>
+            <p className="text-lg font-medium text-gray-900">{t('rating.thanks')}</p>
           </div>
         ) : (
           <>
             {/* Header */}
             <div className="bg-primary px-6 py-4">
-              <h3 className="text-lg font-semibold text-white">{t.title}</h3>
-              <p className="text-sm text-white/80">{t.subtitle}</p>
+              <h3 className="text-lg font-semibold text-white">{t('rating.title')}</h3>
+              <p className="text-sm text-white/80">{t('rating.subtitle')}</p>
             </div>
 
             {/* Content */}
@@ -178,7 +119,7 @@ export function StarRatingPopup({ isOpen, onClose, onSubmit, language }: StarRat
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder={t.commentPlaceholder}
+                placeholder={t('rating.commentPlaceholder')}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
                 rows={3}
                 maxLength={500}
@@ -191,7 +132,7 @@ export function StarRatingPopup({ isOpen, onClose, onSubmit, language }: StarRat
                   onClick={handleSkip}
                   className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  {t.skip}
+                  {t('rating.skip')}
                 </button>
                 <button
                   type="button"
@@ -219,7 +160,7 @@ export function StarRatingPopup({ isOpen, onClose, onSubmit, language }: StarRat
                       </svg>
                     </span>
                   ) : (
-                    t.submit
+                    t('rating.submit')
                   )}
                 </button>
               </div>

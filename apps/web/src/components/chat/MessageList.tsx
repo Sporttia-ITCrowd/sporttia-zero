@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Message } from './Message';
 import type { Message as MessageType } from '../../lib/api';
 
@@ -8,6 +9,7 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, isLoading }: MessageListProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(0);
 
@@ -34,19 +36,15 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
     return (
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="text-center text-muted-foreground max-w-md">
-          <p className="text-lg font-medium mb-3">Welcome to Sporttia ZERO</p>
-          <p className="text-sm mb-4">
-            I'll help you configure your sports center step by step. I'll ask you for:
-          </p>
+          <p className="text-lg font-medium mb-3">{t('welcome.title')}</p>
+          <p className="text-sm mb-4">{t('welcome.description')}</p>
           <ul className="text-sm text-left space-y-1 mb-4">
-            <li>• Your name and contact email</li>
-            <li>• Sports center name and location</li>
-            <li>• Facilities and their schedules</li>
-            <li>• Rates for each sport</li>
+            <li>• {t('welcome.item1')}</li>
+            <li>• {t('welcome.item2')}</li>
+            <li>• {t('welcome.item3')}</li>
+            <li>• {t('welcome.item4')}</li>
           </ul>
-          <p className="text-sm italic">
-            Type a message to start the conversation.
-          </p>
+          <p className="text-sm italic">{t('welcome.cta')}</p>
         </div>
       </div>
     );

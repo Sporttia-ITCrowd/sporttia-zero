@@ -1,0 +1,56 @@
+{
+  "welcome": {
+    "title": "Bienvenue sur Sporttia ZERO",
+    "description": "Je vais vous aider a configurer votre centre sportif etape par etape. Je vous demanderai :",
+    "item1": "Votre nom et email de contact",
+    "item2": "Nom et emplacement du centre sportif",
+    "item3": "Installations et leurs horaires",
+    "item4": "Tarifs pour chaque sport",
+    "cta": "Ecrivez un message pour commencer la conversation."
+  },
+  "header": {
+    "newConversation": "Nouvelle conversation"
+  },
+  "status": {
+    "loading": "Chargement",
+    "sending": "Envoi",
+    "error": "Erreur",
+    "connected": "Connecte"
+  },
+  "resetDialog": {
+    "title": "Commencer une nouvelle conversation ?",
+    "description": "Cela effacera la conversation actuelle et recommencera a zero. Cette action est irreversible.",
+    "cancel": "Annuler",
+    "confirm": "Nouvelle conversation"
+  },
+  "error": {
+    "dismiss": "Fermer"
+  },
+  "chat": {
+    "initializing": "Initialisation de la conversation...",
+    "placeholder": "Ecrivez votre message...",
+    "placeholderInitializing": "Initialisation...",
+    "placeholderSending": "Envoi...",
+    "placeholderCompleted": "Conversation terminee",
+    "sendMessage": "Envoyer le message"
+  },
+  "sidebar": {
+    "info": "Cet assistant vous permet de creer un centre sportif de base. N'oubliez pas que Sporttia dispose de nombreux autres modules pour gerer les membres, les paiements par carte, les activites, les tournois, etc.",
+    "salesContact": "Si vous preferez contacter un representant commercial, vous pouvez nous ecrire a",
+    "language": "Langue",
+    "feedbackTitle": "Partagez vos commentaires sur cet assistant :",
+    "feedbackPlaceholder": "Ecrivez vos commentaires ici...",
+    "feedbackSend": "Envoyer",
+    "feedbackSending": "Envoi...",
+    "feedbackSuccess": "Merci pour vos commentaires !",
+    "feedbackError": "Echec de l'envoi. Veuillez reessayer."
+  },
+  "rating": {
+    "title": "Aidez-nous a ameliorer",
+    "subtitle": "Evaluez votre experience",
+    "commentPlaceholder": "Commentaires supplementaires (facultatif)",
+    "submit": "Envoyer",
+    "skip": "Passer",
+    "thanks": "Merci pour votre avis"
+  }
+}

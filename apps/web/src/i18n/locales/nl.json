@@ -1,0 +1,56 @@
+{
+  "welcome": {
+    "title": "Welkom bij Sporttia ZERO",
+    "description": "Ik help u stap voor stap bij het configureren van uw sportcentrum. Ik zal u vragen naar:",
+    "item1": "Uw naam en contact e-mail",
+    "item2": "Naam en locatie van het sportcentrum",
+    "item3": "Faciliteiten en hun roosters",
+    "item4": "Tarieven voor elke sport",
+    "cta": "Typ een bericht om het gesprek te starten."
+  },
+  "header": {
+    "newConversation": "Nieuw gesprek"
+  },
+  "status": {
+    "loading": "Laden",
+    "sending": "Verzenden",
+    "error": "Fout",
+    "connected": "Verbonden"
+  },
+  "resetDialog": {
+    "title": "Nieuw gesprek starten?",
+    "description": "Dit wist het huidige gesprek en begint opnieuw. Deze actie kan niet ongedaan worden gemaakt.",
+    "cancel": "Annuleren",
+    "confirm": "Nieuw starten"
+  },
+  "error": {
+    "dismiss": "Sluiten"
+  },
+  "chat": {
+    "initializing": "Gesprek initialiseren...",
+    "placeholder": "Typ uw bericht...",
+    "placeholderInitializing": "Initialiseren...",
+    "placeholderSending": "Verzenden...",
+    "placeholderCompleted": "Gesprek voltooid",
+    "sendMessage": "Bericht verzenden"
+  },
+  "sidebar": {
+    "info": "Met deze assistent kunt u een basis sportcentrum aanmaken. Houd er rekening mee dat Sporttia nog veel meer modules heeft voor het beheren van leden, kaartbetalingen, activiteiten, toernooien, enz.",
+    "salesContact": "Als u liever contact opneemt met een verkoper, kunt u ons schrijven naar",
+    "language": "Taal",
+    "feedbackTitle": "Deel uw feedback over deze assistent:",
+    "feedbackPlaceholder": "Schrijf hier uw feedback...",
+    "feedbackSend": "Verzenden",
+    "feedbackSending": "Verzenden...",
+    "feedbackSuccess": "Bedankt voor uw feedback!",
+    "feedbackError": "Verzenden mislukt. Probeer het opnieuw."
+  },
+  "rating": {
+    "title": "Help ons verbeteren",
+    "subtitle": "Beoordeel uw ervaring",
+    "commentPlaceholder": "Extra opmerkingen (optioneel)",
+    "submit": "Verzenden",
+    "skip": "Overslaan",
+    "thanks": "Bedankt voor uw beoordeling"
+  }
+}

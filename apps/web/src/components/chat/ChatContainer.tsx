@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useChat } from '../../hooks/useChat';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
@@ -11,9 +12,11 @@ import { api } from '../../lib/api';
 const FEEDBACK_SHOWN_KEY = 'sporttia_zero_feedback_shown';
 
 export function ChatContainer() {
+  const { t } = useTranslation();
   const { messages, status, error, language, conversationId, sendMessage, clearError, resetConversation } = useChat();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRatingPopup, setShowRatingPopup] = useState(false);
+  const [isConversationCompleted, setIsConversationCompleted] = useState(false);
 
   const isLoading = status === 'loading';
   const isSending = status === 'sending';
@@ -58,6 +61,7 @@ export function ChatContainer() {
 
   const handleRatingClose = () => {
     setShowRatingPopup(false);
+    setIsConversationCompleted(true);
     // Also mark as shown when skipped
     if (conversationId) {
       const shownConversations = JSON.parse(localStorage.getItem(FEEDBACK_SHOWN_KEY) || '[]');
@@ -84,12 +88,12 @@ export function ChatContainer() {
                 </h1>
               </div>
               <div className="flex items-center gap-3">
-                <StatusIndicator status={status} />
+                <StatusIndicator status={status} t={t} />
                 <button
                   onClick={() => setShowResetConfirm(true)}
                   disabled={isInitializing}
                   className="p-1.5 rounded-md text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="New conversation"
+                  title={t('header.newConversation')}
                 >
                   <RefreshIcon className="w-5 h-5" />
                 </button>
@@ -101,17 +105,17 @@ export function ChatContainer() {
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Start new conversation?
+                    {t('resetDialog.title')}
                   </h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    This will clear the current conversation and start fresh. This action cannot be undone.
+                    {t('resetDialog.description')}
                   </p>
                   <div className="flex justify-end gap-3">
                     <button
                       onClick={() => setShowResetConfirm(false)}
                       className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
                     >
-                      Cancel
+                      {t('resetDialog.cancel')}
                     </button>
                     <button
                       onClick={() => {
@@ -120,7 +124,7 @@ export function ChatContainer() {
                       }}
                       className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
                     >
-                      Start new
+                      {t('resetDialog.confirm')}
                     </button>
                   </div>
                 </div>
@@ -136,7 +140,7 @@ export function ChatContainer() {
                     onClick={clearError}
                     className="text-destructive hover:text-destructive/80 text-sm font-medium"
                   >
-                    Dismiss
+                    {t('error.dismiss')}
                   </button>
                 </div>
               </div>
@@ -148,7 +152,7 @@ export function ChatContainer() {
                 <div className="text-center">
                   <LoadingSpinner />
                   <p className="text-sm text-muted-foreground mt-2">
-                    Initializing conversation...
+                    {t('chat.initializing')}
                   </p>
                 </div>
               </div>
@@ -159,13 +163,15 @@ export function ChatContainer() {
             {/* Input area */}
             <MessageInput
               onSend={sendMessage}
-              disabled={isInitializing || isSending}
+              disabled={isInitializing || isSending || isConversationCompleted}
               placeholder={
                 isInitializing
-                  ? 'Initializing...'
+                  ? t('chat.placeholderInitializing')
                   : isSending
-                    ? 'Sending...'
-                    : 'Type your message...'
+                    ? t('chat.placeholderSending')
+                    : isConversationCompleted
+                      ? t('chat.placeholderCompleted')
+                      : t('chat.placeholder')
               }
             />
           </div>
@@ -186,21 +192,27 @@ export function ChatContainer() {
   );
 }
 
-function StatusIndicator({ status }: { status: string }) {
+function StatusIndicator({
+  status,
+  t,
+}: {
+  status: string;
+  t: (key: string) => string;
+}) {
   const getStatusConfig = () => {
     switch (status) {
       case 'loading':
-        return { color: 'bg-yellow-300', label: 'Loading' };
+        return { color: 'bg-yellow-300', labelKey: 'status.loading' };
       case 'sending':
-        return { color: 'bg-blue-300', label: 'Sending' };
+        return { color: 'bg-blue-300', labelKey: 'status.sending' };
       case 'error':
-        return { color: 'bg-red-400', label: 'Error' };
+        return { color: 'bg-red-400', labelKey: 'status.error' };
       default:
-        return { color: 'bg-white', label: 'Connected' };
+        return { color: 'bg-white', labelKey: 'status.connected' };
     }
   };
 
-  const { color, label } = getStatusConfig();
+  const { color, labelKey } = getStatusConfig();
 
   return (
     <div className="flex items-center gap-2 text-xs text-primary-foreground/80">
@@ -211,7 +223,7 @@ function StatusIndicator({ status }: { status: string }) {
           status === 'sending' && 'animate-pulse'
         )}
       />
-      <span className="hidden sm:inline">{label}</span>
+      <span className="hidden sm:inline">{t(labelKey)}</span>
     </div>
   );
 }

@@ -1,0 +1,56 @@
+{
+  "welcome": {
+    "title": "Willkommen bei Sporttia ZERO",
+    "description": "Ich helfe Ihnen Schritt fur Schritt bei der Konfiguration Ihres Sportzentrums. Ich werde Sie fragen nach:",
+    "item1": "Ihrem Namen und Ihrer Kontakt-E-Mail",
+    "item2": "Name und Standort des Sportzentrums",
+    "item3": "Einrichtungen und deren Zeitplane",
+    "item4": "Preise fur jede Sportart",
+    "cta": "Schreiben Sie eine Nachricht, um das Gesprach zu beginnen."
+  },
+  "header": {
+    "newConversation": "Neues Gesprach"
+  },
+  "status": {
+    "loading": "Laden",
+    "sending": "Senden",
+    "error": "Fehler",
+    "connected": "Verbunden"
+  },
+  "resetDialog": {
+    "title": "Neues Gesprach starten?",
+    "description": "Dies loscht das aktuelle Gesprach und startet neu. Diese Aktion kann nicht ruckgangig gemacht werden.",
+    "cancel": "Abbrechen",
+    "confirm": "Neu starten"
+  },
+  "error": {
+    "dismiss": "Schliessen"
+  },
+  "chat": {
+    "initializing": "Gesprach wird initialisiert...",
+    "placeholder": "Schreiben Sie Ihre Nachricht...",
+    "placeholderInitializing": "Initialisierung...",
+    "placeholderSending": "Senden...",
+    "placeholderCompleted": "Gesprach abgeschlossen",
+    "sendMessage": "Nachricht senden"
+  },
+  "sidebar": {
+    "info": "Dieser Assistent ermoglicht Ihnen die Erstellung eines einfachen Sportzentrums. Beachten Sie, dass Sporttia viele weitere Module zur Verwaltung von Mitgliedern, Kartenzahlungen, Aktivitaten, Turnieren usw. bietet.",
+    "salesContact": "Wenn Sie lieber einen Vertriebsmitarbeiter kontaktieren mochten, schreiben Sie uns an",
+    "language": "Sprache",
+    "feedbackTitle": "Teilen Sie Ihr Feedback zu diesem Assistenten:",
+    "feedbackPlaceholder": "Schreiben Sie Ihr Feedback hier...",
+    "feedbackSend": "Senden",
+    "feedbackSending": "Senden...",
+    "feedbackSuccess": "Vielen Dank fur Ihr Feedback!",
+    "feedbackError": "Senden fehlgeschlagen. Bitte versuchen Sie es erneut."
+  },
+  "rating": {
+    "title": "Helfen Sie uns zu verbessern",
+    "subtitle": "Bewerten Sie Ihre Erfahrung",
+    "commentPlaceholder": "Zusatzliche Kommentare (optional)",
+    "submit": "Senden",
+    "skip": "Uberspringen",
+    "thanks": "Danke fur Ihr Feedback"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../lib/api';
 import { APP_VERSION } from '../../lib/constants';
 
@@ -32,6 +33,7 @@ interface InfoSidebarProps {
 }
 
 export function InfoSidebar({ language, conversationId }: InfoSidebarProps) {
+  const { t } = useTranslation();
   const languageName = language ? getLanguageName(language) : null;
   const [feedbackText, setFeedbackText] = useState('');
   const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -57,17 +59,13 @@ export function InfoSidebar({ language, conversationId }: InfoSidebarProps) {
     <div className="hidden lg:flex flex-col gap-4 w-full max-w-md">
       {/* Info Card */}
       <InfoCard icon={<InfoIcon className="w-6 h-6" />}>
-        <p>
-          This assistant allows you to create a basic sports center. Keep in mind that
-          Sporttia has many more modules to manage members, card payments, activities,
-          tournaments, etc.
-        </p>
+        <p>{t('sidebar.info')}</p>
       </InfoCard>
 
       {/* Sales Contact Card */}
       <InfoCard icon={<PersonIcon className="w-6 h-6" />}>
         <p>
-          If you prefer to contact a sales representative, you can write to us at{' '}
+          {t('sidebar.salesContact')}{' '}
           <a
             href="mailto:sales@sporttia.com"
             className="text-primary hover:underline font-medium"
@@ -82,7 +80,7 @@ export function InfoSidebar({ language, conversationId }: InfoSidebarProps) {
       {languageName && (
         <InfoCard icon={<LanguageIcon className="w-6 h-6" />}>
           <p>
-            <span className="text-muted-foreground">Language:</span>{' '}
+            <span className="text-muted-foreground">{t('sidebar.language')}:</span>{' '}
             <span className="font-medium">{languageName}</span>
           </p>
         </InfoCard>
@@ -95,14 +93,14 @@ export function InfoSidebar({ language, conversationId }: InfoSidebarProps) {
             <FeedbackIcon className="w-6 h-6" />
           </div>
           <p className="text-sm text-foreground leading-relaxed">
-            Share your feedback about this assistant:
+            {t('sidebar.feedbackTitle')}
           </p>
         </div>
         <div className="space-y-2">
           <textarea
             value={feedbackText}
             onChange={(e) => setFeedbackText(e.target.value)}
-            placeholder="Write your feedback here..."
+            placeholder={t('sidebar.feedbackPlaceholder')}
             className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
             rows={3}
             maxLength={2000}
@@ -117,14 +115,14 @@ export function InfoSidebar({ language, conversationId }: InfoSidebarProps) {
               disabled={!feedbackText.trim() || feedbackStatus === 'sending'}
               className="px-4 py-1.5 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {feedbackStatus === 'sending' ? 'Sending...' : 'Send'}
+              {feedbackStatus === 'sending' ? t('sidebar.feedbackSending') : t('sidebar.feedbackSend')}
             </button>
           </div>
           {feedbackStatus === 'sent' && (
-            <p className="text-xs text-green-600">Thank you for your feedback!</p>
+            <p className="text-xs text-green-600">{t('sidebar.feedbackSuccess')}</p>
           )}
           {feedbackStatus === 'error' && (
-            <p className="text-xs text-red-600">Failed to send feedback. Please try again.</p>
+            <p className="text-xs text-red-600">{t('sidebar.feedbackError')}</p>
           )}
         </div>
       </div>

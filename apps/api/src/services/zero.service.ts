@@ -598,6 +598,28 @@ export async function createSportsCenter(
       'Sports center creation failed, transaction rolled back'
     );
 
+    // Check for duplicate key error (MySQL error 1062)
+    // This typically happens when email already exists in the user table
+    if (sqlError.errno === 1062 || sqlError.code === 'ER_DUP_ENTRY') {
+      const isDuplicateEmail = sqlError.sqlMessage?.toLowerCase().includes('email') ||
+                               sqlError.sql?.toLowerCase().includes('email');
+
+      if (isDuplicateEmail) {
+        throw new ZeroServiceError(
+          'This email address is already registered in Sporttia. Please use a different email.',
+          'DUPLICATE_EMAIL',
+          false // Not retryable - user must change email
+        );
+      }
+
+      // Other duplicate key errors
+      throw new ZeroServiceError(
+        'A record with this information already exists.',
+        'DUPLICATE_ENTRY',
+        false
+      );
+    }
+
     throw new ZeroServiceError(
       `Failed to create sports center: ${message}`,
       'CREATION_FAILED',

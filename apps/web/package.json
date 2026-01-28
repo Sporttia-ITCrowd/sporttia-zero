@@ -1,6 +1,6 @@
 {
   "name": "@sporttia-zero/web",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "description": "Chat interface for Sporttia ZERO",
@@ -18,9 +18,11 @@
     "@sporttia-zero/shared": "*",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "i18next": "^25.8.0",
     "lucide-react": "^0.330.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-i18next": "^16.5.4",
     "react-markdown": "^10.1.0",
     "tailwind-merge": "^2.2.0"
   },
