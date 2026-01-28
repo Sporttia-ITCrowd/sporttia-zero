@@ -1,11 +1,10 @@
 import { getResendClient, isResendConfigured, getEmailFrom, EMAIL_CONFIG } from '../lib/resend';
 import {
-  generateWelcomeEmailHtml,
-  generateWelcomeEmailText,
-  getWelcomeEmailSubject,
+  generateWelcomeEmailHtmlWithTranslations,
+  generateWelcomeEmailTextWithTranslations,
   type WelcomeEmailData,
-  type SupportedLanguage,
 } from '../lib/email-templates';
+import { getEmailTranslations } from './translation.service';
 import { createLogger } from '../lib/logger';
 import { logEmailFailed } from './analytics.service';
 
@@ -37,19 +36,10 @@ export interface WelcomeEmailParams {
 }
 
 /**
- * Supported language codes
+ * Normalize language code (take first 2 characters)
  */
-const SUPPORTED_LANGUAGES = ['es', 'en', 'pt', 'sv', 'de', 'fr', 'it', 'nl'] as const;
-
-/**
- * Normalize language code to supported language
- */
-function normalizeLanguage(lang: string): SupportedLanguage {
-  const normalized = lang.toLowerCase().substring(0, 2);
-  if (SUPPORTED_LANGUAGES.includes(normalized as SupportedLanguage)) {
-    return normalized as SupportedLanguage;
-  }
-  return 'en'; // Default to English for unsupported languages
+function normalizeLanguage(lang: string): string {
+  return lang.toLowerCase().substring(0, 2);
 }
 
 /**
@@ -107,9 +97,12 @@ export async function sendWelcomeEmail(params: WelcomeEmailParams): Promise<Send
     language,
   };
 
-  const subject = getWelcomeEmailSubject(language);
-  const html = generateWelcomeEmailHtml(emailData);
-  const text = generateWelcomeEmailText(emailData);
+  // Get translations (from DB or generate with AI for new languages)
+  const translations = await getEmailTranslations(language);
+
+  const subject = translations.subject;
+  const html = generateWelcomeEmailHtmlWithTranslations(emailData, translations);
+  const text = generateWelcomeEmailTextWithTranslations(emailData, translations);
 
   // Attempt to send with retries
   let lastError: Error | null = null;

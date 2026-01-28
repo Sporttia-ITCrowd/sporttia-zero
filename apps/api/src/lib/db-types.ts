@@ -97,6 +97,37 @@ export interface FeedbacksTable {
   created_at: Generated<Date>;
 }
 
+// Email translations table for dynamic language support
+export interface EmailTranslationsTable {
+  id: Generated<string>;
+  language_code: string;
+  template_type: string;
+  translations: EmailTranslationContent;
+  created_at: Generated<Date>;
+  updated_at: Generated<Date>;
+}
+
+// Email translation content structure
+export interface EmailTranslationContent {
+  subject: string;
+  greeting: string;
+  intro: string;
+  accountCreated: string;
+  yourDetails: string;
+  sportsCenterLabel: string;
+  cityLabel: string;
+  adminEmailLabel: string;
+  facilitiesLabel: string;
+  facilitiesCountLabel: string;
+  credentialsTitle: string;
+  usernameLabel: string;
+  passwordLabel: string;
+  credentialsWarning: string;
+  loginButton: string;
+  supportText: string;
+  footer: string;
+}
+
 // Database schema
 export interface Database {
   conversations: ConversationsTable;
@@ -104,6 +135,7 @@ export interface Database {
   sports_centers: SportsCentersTable;
   analytics_events: AnalyticsEventsTable;
   feedbacks: FeedbacksTable;
+  email_translations: EmailTranslationsTable;
 }
 
 // Type helpers for CRUD operations
@@ -123,3 +155,6 @@ export type NewAnalyticsEvent = Insertable<AnalyticsEventsTable>;
 
 export type Feedback = Selectable<FeedbacksTable>;
 export type NewFeedback = Insertable<FeedbacksTable>;
+
+export type EmailTranslation = Selectable<EmailTranslationsTable>;
+export type NewEmailTranslation = Insertable<EmailTranslationsTable>;

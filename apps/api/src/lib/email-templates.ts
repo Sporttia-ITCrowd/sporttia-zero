@@ -1,14 +1,16 @@
 /**
  * Email templates for Sporttia ZERO
- * Supports multiple languages with English fallback
+ * Supports multiple languages with dynamic AI translation for new languages
  */
+
+import type { EmailTranslationContent } from './db-types';
 
 export type SupportedLanguage = 'es' | 'en' | 'pt' | 'sv' | 'de' | 'fr' | 'it' | 'nl';
 
 /**
  * Sporttia brand logo URL
  */
-const SPORTTIA_LOGO_URL = 'https://manager.sporttia.com/assets/sporttia-logo-new-B3PqYzJh.png';
+const SPORTTIA_LOGO_URL = 'https://zero.sporttia.com/sporttia-logo.png';
 
 export interface WelcomeEmailData {
   sportsCenterName: string;
@@ -23,35 +25,22 @@ export interface WelcomeEmailData {
     sportName: string;
   }>;
   sporttiaId: number;
-  language: SupportedLanguage;
+  language: string; // Now accepts any language code
 }
 
-interface EmailTranslations {
-  subject: string;
-  greeting: string;
-  intro: string;
-  accountCreated: string;
-  yourDetails: string;
-  sportsCenterLabel: string;
-  cityLabel: string;
-  adminEmailLabel: string;
-  facilitiesLabel: string;
-  facilitiesCountLabel: string;
-  credentialsTitle: string;
-  usernameLabel: string;
-  passwordLabel: string;
-  credentialsWarning: string;
-  loginButton: string;
-  supportText: string;
-  footer: string;
-}
+// Re-export for backward compatibility
+export type EmailTranslations = EmailTranslationContent;
 
 /**
  * Support email for all languages
  */
 const SUPPORT_EMAIL = 'info@sporttia.com';
 
-const translations: Record<SupportedLanguage, EmailTranslations> = {
+/**
+ * Hardcoded translations for base languages
+ * These serve as fallback and are seeded to the database on startup
+ */
+const hardcodedTranslations: Record<SupportedLanguage, EmailTranslations> = {
   es: {
     subject: '¡Bienvenido a Sporttia! Tu centro deportivo está listo',
     greeting: 'Hola',
@@ -207,11 +196,19 @@ const translations: Record<SupportedLanguage, EmailTranslations> = {
 };
 
 /**
- * Get translations for a language, defaulting to English for unsupported languages
+ * Get hardcoded translations for seeding the database
  */
-function getTranslations(language: string): EmailTranslations {
-  const lang = language as SupportedLanguage;
-  return translations[lang] || translations.en;
+export function getHardcodedTranslations(): Record<string, EmailTranslations> {
+  return hardcodedTranslations;
+}
+
+/**
+ * Get translations for a language synchronously (fallback only)
+ * For dynamic translations, use getEmailTranslations from translation.service.ts
+ */
+function getTranslationsSync(language: string): EmailTranslations {
+  const lang = language.toLowerCase().substring(0, 2) as SupportedLanguage;
+  return hardcodedTranslations[lang] || hardcodedTranslations.en;
 }
 
 /**
@@ -220,10 +217,12 @@ function getTranslations(language: string): EmailTranslations {
 const SPORTTIA_MANAGER_URL = 'https://manager.sporttia.com';
 
 /**
- * Generate the welcome email HTML
+ * Generate the welcome email HTML with provided translations
  */
-export function generateWelcomeEmailHtml(data: WelcomeEmailData): string {
-  const t = getTranslations(data.language);
+export function generateWelcomeEmailHtmlWithTranslations(
+  data: WelcomeEmailData,
+  t: EmailTranslations
+): string {
 
   const facilitiesList = data.facilities
     .map((f) => `<li><strong>${f.name}</strong> - ${f.sportName}</li>`)
@@ -409,11 +408,12 @@ export function generateWelcomeEmailHtml(data: WelcomeEmailData): string {
 }
 
 /**
- * Generate the welcome email plain text version
+ * Generate the welcome email plain text version with provided translations
  */
-export function generateWelcomeEmailText(data: WelcomeEmailData): string {
-  const t = getTranslations(data.language);
-
+export function generateWelcomeEmailTextWithTranslations(
+  data: WelcomeEmailData,
+  t: EmailTranslations
+): string {
   const facilitiesList = data.facilities.map((f) => `  - ${f.name} (${f.sportName})`).join('\n');
 
   return `
@@ -446,9 +446,19 @@ ${t.footer}
 }
 
 /**
- * Get the email subject for welcome email
+ * Sync versions for backward compatibility (use hardcoded translations only)
  */
+export function generateWelcomeEmailHtml(data: WelcomeEmailData): string {
+  const t = getTranslationsSync(data.language);
+  return generateWelcomeEmailHtmlWithTranslations(data, t);
+}
+
+export function generateWelcomeEmailText(data: WelcomeEmailData): string {
+  const t = getTranslationsSync(data.language);
+  return generateWelcomeEmailTextWithTranslations(data, t);
+}
+
 export function getWelcomeEmailSubject(language: string): string {
-  const t = getTranslations(language);
+  const t = getTranslationsSync(language);
   return t.subject;
 }
