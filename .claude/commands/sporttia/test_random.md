@@ -49,20 +49,13 @@ Before starting, randomly select:
    - Australia/NZ: Tennis, Cricket nets, Netball
    - Indonesia/Philippines/Vietnam: Badminton, Tennis, Futsal
 
-5. **Email**: Go to https://www.mail-tester.com first, get the test email address shown
+5. **Email**: Generate a random email using the format `jperez+{random}@sporttia.com`
+   - Generate a random alphanumeric string (8-12 characters)
+   - Example: `jperez+ksd88fd6sd6f@sporttia.com`
 
 ## Playwright Execution Steps
 
-### Step 1: Get Test Email from mail-tester.com
-```
-1. Use mcp__playwright__browser_navigate to go to https://www.mail-tester.com
-2. Use mcp__playwright__browser_snapshot to capture the page
-3. Find the textbox with placeholder containing "@srv1.mail-tester.com"
-4. The email will be in format: test-XXXXXX@srv1.mail-tester.com
-5. Save this email for later use
-```
-
-### Step 2: Navigate to Sporttia Zero and Reset Conversation
+### Step 1: Navigate to Sporttia Zero and Reset Conversation
 ```
 1. Use mcp__playwright__browser_navigate to go to http://localhost:4501
 2. Use mcp__playwright__browser_snapshot to check the page state
@@ -80,7 +73,7 @@ To reset conversation:
 4. Wait for the welcome message to appear with text "Welcome to Sporttia ZERO"
 ```
 
-### Step 3: Start Conversation in Local Language
+### Step 2: Start Conversation in Local Language
 ```
 1. Find the message input textbox (role: textbox, name: "Type your message...")
 2. Type a greeting + intent in the selected language:
@@ -100,7 +93,7 @@ To reset conversation:
 4. Wait 2-3 seconds for response using mcp__playwright__browser_wait_for with time parameter
 ```
 
-### Step 4: Provide Information Flow
+### Step 3: Provide Information Flow
 The assistant will ask for information in this order. Respond to each:
 
 ```
@@ -131,7 +124,7 @@ The assistant will ask for information in this order. Respond to each:
    - Indonesia: "Pusat Olahraga [Name]"
    - Vietnam: "Trung tâm thể thao [Name]"
 
-3. Email → Use the mail-tester.com email saved earlier
+3. Email → Use the generated jperez+{random}@sporttia.com email
 
 4. City → Confirm the city (assistant may auto-detect from greeting)
 
@@ -156,7 +149,7 @@ The assistant will ask for information in this order. Respond to each:
 6. Confirm creation → Say "yes/confirm" in local language when asked
 ```
 
-### Step 5: Wait for Success and Submit Feedback
+### Step 4: Wait for Success and Submit Feedback
 ```
 1. After confirmation, wait 3-5 seconds for the sports center to be created
 2. Look for success message containing keywords like "created", "success", "creado", "créé", etc.
@@ -172,7 +165,7 @@ The assistant will ask for information in this order. Respond to each:
    - Verify "Thank you for your feedback!" appears
 ```
 
-### Step 6: Verify City in Database
+### Step 5: Verify City in Database
 After the sports center is created successfully, verify the city was created correctly in the database:
 
 ```

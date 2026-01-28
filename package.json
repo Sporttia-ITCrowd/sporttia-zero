@@ -1,6 +1,6 @@
 {
   "name": "sporttia-zero",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "AI-powered conversational assistant for onboarding sports centers onto Sporttia",
   "workspaces": [
