@@ -1,9 +1,14 @@
 /**
  * Email templates for Sporttia ZERO
- * Supports Spanish (es), English (en), and Portuguese (pt)
+ * Supports multiple languages with English fallback
  */
 
-export type SupportedLanguage = 'es' | 'en' | 'pt';
+export type SupportedLanguage = 'es' | 'en' | 'pt' | 'sv' | 'de' | 'fr' | 'it' | 'nl';
+
+/**
+ * Sporttia brand logo URL
+ */
+const SPORTTIA_LOGO_URL = 'https://manager.sporttia.com/assets/sporttia-logo-new-B3PqYzJh.png';
 
 export interface WelcomeEmailData {
   sportsCenterName: string;
@@ -36,15 +41,15 @@ interface EmailTranslations {
   usernameLabel: string;
   passwordLabel: string;
   credentialsWarning: string;
-  nextStepsTitle: string;
-  nextSteps: string[];
-  freemiumTitle: string;
-  freemiumInfo: string[];
   loginButton: string;
   supportText: string;
-  supportEmail: string;
   footer: string;
 }
+
+/**
+ * Support email for all languages
+ */
+const SUPPORT_EMAIL = 'info@sporttia.com';
 
 const translations: Record<SupportedLanguage, EmailTranslations> = {
   es: {
@@ -62,24 +67,8 @@ const translations: Record<SupportedLanguage, EmailTranslations> = {
     usernameLabel: 'Usuario',
     passwordLabel: 'Contraseña',
     credentialsWarning: 'Por seguridad, te recomendamos cambiar tu contraseña después del primer acceso.',
-    nextStepsTitle: 'Próximos pasos',
-    nextSteps: [
-      'Accede al panel de administración con tus credenciales',
-      'Cambia tu contraseña por una más segura',
-      'Personaliza tu centro: añade logo, fotos y descripción',
-      'Configura los métodos de pago para aceptar reservas online',
-      'Comparte tu enlace de reservas con tus clientes',
-    ],
-    freemiumTitle: 'Tu plan gratuito incluye',
-    freemiumInfo: [
-      'Gestión ilimitada de instalaciones',
-      'Hasta 50 reservas mensuales',
-      'Panel de administración completo',
-      'Soporte por email',
-    ],
     loginButton: 'Acceder a Sporttia Manager',
     supportText: '¿Necesitas ayuda? Escríbenos a',
-    supportEmail: 'soporte@sporttia.com',
     footer: '© Sporttia - La plataforma de gestión para centros deportivos',
   },
   en: {
@@ -97,24 +86,8 @@ const translations: Record<SupportedLanguage, EmailTranslations> = {
     usernameLabel: 'Username',
     passwordLabel: 'Password',
     credentialsWarning: 'For security, we recommend changing your password after your first login.',
-    nextStepsTitle: 'Next steps',
-    nextSteps: [
-      'Log in to the admin panel with your credentials',
-      'Change your password to a more secure one',
-      'Customize your center: add logo, photos, and description',
-      'Set up payment methods to accept online bookings',
-      'Share your booking link with your customers',
-    ],
-    freemiumTitle: 'Your free plan includes',
-    freemiumInfo: [
-      'Unlimited facility management',
-      'Up to 50 monthly bookings',
-      'Full admin dashboard',
-      'Email support',
-    ],
     loginButton: 'Access Sporttia Manager',
     supportText: 'Need help? Contact us at',
-    supportEmail: 'support@sporttia.com',
     footer: '© Sporttia - The management platform for sports centers',
   },
   pt: {
@@ -132,34 +105,113 @@ const translations: Record<SupportedLanguage, EmailTranslations> = {
     usernameLabel: 'Usuário',
     passwordLabel: 'Senha',
     credentialsWarning: 'Por segurança, recomendamos que você altere sua senha após o primeiro acesso.',
-    nextStepsTitle: 'Próximos passos',
-    nextSteps: [
-      'Acesse o painel de administração com suas credenciais',
-      'Altere sua senha para uma mais segura',
-      'Personalize seu centro: adicione logo, fotos e descrição',
-      'Configure os métodos de pagamento para aceitar reservas online',
-      'Compartilhe seu link de reservas com seus clientes',
-    ],
-    freemiumTitle: 'Seu plano gratuito inclui',
-    freemiumInfo: [
-      'Gestão ilimitada de instalações',
-      'Até 50 reservas mensais',
-      'Painel de administração completo',
-      'Suporte por email',
-    ],
     loginButton: 'Acessar Sporttia Manager',
     supportText: 'Precisa de ajuda? Escreva para',
-    supportEmail: 'suporte@sporttia.com',
     footer: '© Sporttia - A plataforma de gestão para centros esportivos',
+  },
+  sv: {
+    subject: 'Välkommen till Sporttia! Ditt sportcenter är klart',
+    greeting: 'Hej',
+    intro: 'Grattis! Ditt sportcenter har skapats framgångsrikt på Sporttia.',
+    accountCreated: 'Ditt konto är redo att börja ta emot bokningar.',
+    yourDetails: 'Ditt sportcenters uppgifter',
+    sportsCenterLabel: 'Sportcenter',
+    cityLabel: 'Stad',
+    adminEmailLabel: 'Administratörens e-post',
+    facilitiesLabel: 'Anläggningar',
+    facilitiesCountLabel: 'anläggning(ar) konfigurerade',
+    credentialsTitle: 'Dina inloggningsuppgifter',
+    usernameLabel: 'Användarnamn',
+    passwordLabel: 'Lösenord',
+    credentialsWarning: 'Av säkerhetsskäl rekommenderar vi att du ändrar ditt lösenord efter första inloggningen.',
+    loginButton: 'Gå till Sporttia Manager',
+    supportText: 'Behöver du hjälp? Kontakta oss på',
+    footer: '© Sporttia - Plattformen för hantering av sportcenter',
+  },
+  de: {
+    subject: 'Willkommen bei Sporttia! Ihr Sportzentrum ist bereit',
+    greeting: 'Hallo',
+    intro: 'Herzlichen Glückwunsch! Ihr Sportzentrum wurde erfolgreich bei Sporttia erstellt.',
+    accountCreated: 'Ihr Konto ist bereit, Buchungen zu empfangen.',
+    yourDetails: 'Ihre Sportzentrum-Details',
+    sportsCenterLabel: 'Sportzentrum',
+    cityLabel: 'Stadt',
+    adminEmailLabel: 'Administrator-E-Mail',
+    facilitiesLabel: 'Einrichtungen',
+    facilitiesCountLabel: 'Einrichtung(en) konfiguriert',
+    credentialsTitle: 'Ihre Zugangsdaten',
+    usernameLabel: 'Benutzername',
+    passwordLabel: 'Passwort',
+    credentialsWarning: 'Aus Sicherheitsgründen empfehlen wir, Ihr Passwort nach der ersten Anmeldung zu ändern.',
+    loginButton: 'Zu Sporttia Manager',
+    supportText: 'Brauchen Sie Hilfe? Kontaktieren Sie uns unter',
+    footer: '© Sporttia - Die Verwaltungsplattform für Sportzentren',
+  },
+  fr: {
+    subject: 'Bienvenue sur Sporttia ! Votre centre sportif est prêt',
+    greeting: 'Bonjour',
+    intro: 'Félicitations ! Votre centre sportif a été créé avec succès sur Sporttia.',
+    accountCreated: 'Votre compte est prêt à recevoir des réservations.',
+    yourDetails: 'Détails de votre centre sportif',
+    sportsCenterLabel: 'Centre sportif',
+    cityLabel: 'Ville',
+    adminEmailLabel: 'Email administrateur',
+    facilitiesLabel: 'Installations',
+    facilitiesCountLabel: 'installation(s) configurée(s)',
+    credentialsTitle: 'Vos identifiants de connexion',
+    usernameLabel: "Nom d'utilisateur",
+    passwordLabel: 'Mot de passe',
+    credentialsWarning: 'Pour des raisons de sécurité, nous vous recommandons de changer votre mot de passe après votre première connexion.',
+    loginButton: 'Accéder à Sporttia Manager',
+    supportText: "Besoin d'aide ? Contactez-nous à",
+    footer: '© Sporttia - La plateforme de gestion pour centres sportifs',
+  },
+  it: {
+    subject: 'Benvenuto su Sporttia! Il tuo centro sportivo è pronto',
+    greeting: 'Ciao',
+    intro: 'Congratulazioni! Il tuo centro sportivo è stato creato con successo su Sporttia.',
+    accountCreated: 'Il tuo account è pronto per ricevere prenotazioni.',
+    yourDetails: 'Dettagli del tuo centro sportivo',
+    sportsCenterLabel: 'Centro sportivo',
+    cityLabel: 'Città',
+    adminEmailLabel: 'Email amministratore',
+    facilitiesLabel: 'Strutture',
+    facilitiesCountLabel: 'struttura/e configurata/e',
+    credentialsTitle: 'Le tue credenziali di accesso',
+    usernameLabel: 'Nome utente',
+    passwordLabel: 'Password',
+    credentialsWarning: 'Per sicurezza, ti consigliamo di cambiare la password dopo il primo accesso.',
+    loginButton: 'Accedi a Sporttia Manager',
+    supportText: 'Hai bisogno di aiuto? Contattaci a',
+    footer: '© Sporttia - La piattaforma di gestione per centri sportivi',
+  },
+  nl: {
+    subject: 'Welkom bij Sporttia! Je sportcentrum is klaar',
+    greeting: 'Hallo',
+    intro: 'Gefeliciteerd! Je sportcentrum is succesvol aangemaakt op Sporttia.',
+    accountCreated: 'Je account is klaar om boekingen te ontvangen.',
+    yourDetails: 'Gegevens van je sportcentrum',
+    sportsCenterLabel: 'Sportcentrum',
+    cityLabel: 'Stad',
+    adminEmailLabel: 'Beheerder e-mail',
+    facilitiesLabel: 'Faciliteiten',
+    facilitiesCountLabel: 'faciliteit(en) geconfigureerd',
+    credentialsTitle: 'Je inloggegevens',
+    usernameLabel: 'Gebruikersnaam',
+    passwordLabel: 'Wachtwoord',
+    credentialsWarning: 'Voor de veiligheid raden we aan om je wachtwoord te wijzigen na je eerste login.',
+    loginButton: 'Ga naar Sporttia Manager',
+    supportText: 'Hulp nodig? Neem contact met ons op via',
+    footer: '© Sporttia - Het beheerplatform voor sportcentra',
   },
 };
 
 /**
- * Get translations for a language, defaulting to Spanish
+ * Get translations for a language, defaulting to English for unsupported languages
  */
 function getTranslations(language: string): EmailTranslations {
   const lang = language as SupportedLanguage;
-  return translations[lang] || translations.es;
+  return translations[lang] || translations.en;
 }
 
 /**
@@ -205,12 +257,8 @@ export function generateWelcomeEmailHtml(data: WelcomeEmailData): string {
       margin-bottom: 30px;
     }
     .logo {
-      font-size: 28px;
-      font-weight: bold;
-      color: #2563eb;
-    }
-    .logo-accent {
-      color: #16a34a;
+      max-width: 180px;
+      height: auto;
     }
     h1 {
       color: #1e293b;
@@ -255,24 +303,6 @@ export function generateWelcomeEmailHtml(data: WelcomeEmailData): string {
     .facilities-list li {
       margin-bottom: 5px;
     }
-    .section {
-      margin-bottom: 30px;
-    }
-    .section h3 {
-      font-size: 16px;
-      color: #1e293b;
-      margin-bottom: 10px;
-      border-bottom: 2px solid #2563eb;
-      padding-bottom: 5px;
-    }
-    .section ul {
-      margin: 0;
-      padding-left: 20px;
-    }
-    .section li {
-      margin-bottom: 8px;
-      color: #475569;
-    }
     .cta-button {
       display: inline-block;
       background-color: #2563eb;
@@ -308,28 +338,12 @@ export function generateWelcomeEmailHtml(data: WelcomeEmailData): string {
       padding-top: 20px;
       border-top: 1px solid #e2e8f0;
     }
-    .freemium-box {
-      background-color: #ecfdf5;
-      border: 1px solid #a7f3d0;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 30px;
-    }
-    .freemium-box h3 {
-      color: #065f46;
-      margin-top: 0;
-      border: none;
-      padding: 0;
-    }
-    .freemium-box li {
-      color: #047857;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">Sport<span class="logo-accent">tia</span></div>
+      <img src="${SPORTTIA_LOGO_URL}" alt="Sporttia" class="logo">
     </div>
 
     <h1>${t.greeting}, ${data.adminName}! 🎉</h1>
@@ -381,22 +395,8 @@ export function generateWelcomeEmailHtml(data: WelcomeEmailData): string {
       <a href="${SPORTTIA_MANAGER_URL}" class="cta-button">${t.loginButton}</a>
     </div>
 
-    <div class="section">
-      <h3>${t.nextStepsTitle}</h3>
-      <ul>
-        ${t.nextSteps.map((step) => `<li>${step}</li>`).join('')}
-      </ul>
-    </div>
-
-    <div class="freemium-box">
-      <h3>✨ ${t.freemiumTitle}</h3>
-      <ul>
-        ${t.freemiumInfo.map((info) => `<li>${info}</li>`).join('')}
-      </ul>
-    </div>
-
     <div class="support">
-      ${t.supportText} <a href="mailto:${t.supportEmail}">${t.supportEmail}</a>
+      ${t.supportText} <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
     </div>
 
     <div class="footer">
@@ -437,17 +437,9 @@ ${t.passwordLabel}: ${data.adminPassword}
 
 ⚠️ ${t.credentialsWarning}
 
-${t.nextStepsTitle}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${t.nextSteps.map((step, i) => `${i + 1}. ${step}`).join('\n')}
-
 ${t.loginButton}: ${SPORTTIA_MANAGER_URL}
 
-${t.freemiumTitle}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${t.freemiumInfo.map((info) => `• ${info}`).join('\n')}
-
-${t.supportText} ${t.supportEmail}
+${t.supportText} ${SUPPORT_EMAIL}
 
 ${t.footer}
   `.trim();

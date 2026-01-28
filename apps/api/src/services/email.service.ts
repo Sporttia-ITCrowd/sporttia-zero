@@ -37,14 +37,19 @@ export interface WelcomeEmailParams {
 }
 
 /**
+ * Supported language codes
+ */
+const SUPPORTED_LANGUAGES = ['es', 'en', 'pt', 'sv', 'de', 'fr', 'it', 'nl'] as const;
+
+/**
  * Normalize language code to supported language
  */
 function normalizeLanguage(lang: string): SupportedLanguage {
   const normalized = lang.toLowerCase().substring(0, 2);
-  if (normalized === 'es' || normalized === 'en' || normalized === 'pt') {
-    return normalized;
+  if (SUPPORTED_LANGUAGES.includes(normalized as SupportedLanguage)) {
+    return normalized as SupportedLanguage;
   }
-  return 'es'; // Default to Spanish
+  return 'en'; // Default to English for unsupported languages
 }
 
 /**
