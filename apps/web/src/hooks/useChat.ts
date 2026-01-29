@@ -17,6 +17,35 @@ export interface UseChatReturn {
 
 const CONVERSATION_STORAGE_KEY = 'sporttia_zero_conversation_id';
 
+/**
+ * Get conversation ID from URL path (e.g., /abc-123 -> abc-123)
+ */
+function getConversationIdFromUrl(): string | null {
+  const path = window.location.pathname;
+  // Match UUID format or any non-empty path segment
+  const match = path.match(/^\/([a-f0-9-]{36})$/i);
+  return match ? match[1] : null;
+}
+
+/**
+ * Update URL to include conversation ID
+ */
+function updateUrlWithConversationId(conversationId: string): void {
+  const newUrl = `/${conversationId}`;
+  if (window.location.pathname !== newUrl) {
+    window.history.replaceState({ conversationId }, '', newUrl);
+  }
+}
+
+/**
+ * Reset URL to root
+ */
+function resetUrl(): void {
+  if (window.location.pathname !== '/') {
+    window.history.replaceState({}, '', '/');
+  }
+}
+
 export function useChat(): UseChatReturn {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ChatStatus>('idle');
@@ -39,24 +68,30 @@ export function useChat(): UseChatReturn {
       setError(null);
 
       try {
-        // Check for existing conversation
+        // Priority: 1. URL path, 2. localStorage
+        const urlConversationId = getConversationIdFromUrl();
         const storedConversationId = localStorage.getItem(CONVERSATION_STORAGE_KEY);
+        const existingConversationId = urlConversationId || storedConversationId;
 
-        if (storedConversationId) {
+        if (existingConversationId) {
           // Try to restore existing conversation
           try {
-            const conversation = await api.getConversation(storedConversationId);
+            const conversation = await api.getConversation(existingConversationId);
             if (!mountedRef.current) return;
             setConversationId(conversation.id);
             // Only show language if there are user messages (meaning language was detected)
             const hasUserMessages = conversation.messages.some(m => m.role === 'user');
             setLanguage(hasUserMessages ? conversation.language : null);
             setMessages(conversation.messages);
+            // Sync localStorage and URL
+            localStorage.setItem(CONVERSATION_STORAGE_KEY, conversation.id);
+            updateUrlWithConversationId(conversation.id);
             setStatus('idle');
             return;
           } catch (err) {
             // Conversation not found or expired, create new one
             localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+            resetUrl();
           }
         }
 
@@ -71,6 +106,7 @@ export function useChat(): UseChatReturn {
         // Don't set language yet - it will be detected from user's first message
         setLanguage(null);
         localStorage.setItem(CONVERSATION_STORAGE_KEY, conversation.id);
+        updateUrlWithConversationId(conversation.id);
         setMessages([]);
         setStatus('idle');
       } catch (err) {
@@ -156,8 +192,9 @@ export function useChat(): UseChatReturn {
     setConversationId(null);
     setLanguage(null);
 
-    // Clear stored conversation
+    // Clear stored conversation and reset URL
     localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+    resetUrl();
 
     try {
       // Create new conversation with browser language
@@ -168,6 +205,7 @@ export function useChat(): UseChatReturn {
       // Don't set language yet - it will be detected from user's first message
       setLanguage(null);
       localStorage.setItem(CONVERSATION_STORAGE_KEY, conversation.id);
+      updateUrlWithConversationId(conversation.id);
       setStatus('idle');
     } catch (err) {
       const errorMessage = err instanceof ApiError

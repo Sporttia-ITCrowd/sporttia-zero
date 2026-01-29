@@ -7,7 +7,7 @@
  * - Sportcenter record with zero flag
  * - 3-month subscription with ACTIVE status
  * - 3 monthly licences with PAID status and FREE payment form
- * - Admin group with SC_ADMIN type and privileges 11, 12
+ * - Admin group with SC_ADMIN type and privileges 11, 12, 13, 24, 26, 28
  * - Admin user with SPORTCENTER role
  * - User-group association
  * - User purse
@@ -128,7 +128,7 @@ async function createSportcenter(
     `INSERT INTO sportcenter (
       name, short, renting, status, visible, mod_purse, language,
       visible_phone, visible_email, customer_id, city_id, zero
-    ) VALUES (?, ?, 1, ?, 0, 1, ?, '', '', ?, ?, 1)`,
+    ) VALUES (?, ?, 1, ?, 1, 1, ?, '', '', ?, ?, 1)`,
     [name, name.substring(0, 50), SPORTCENTER_STATUS.ACTIVE, language, customerId, cityId]
   );
   return result.insertId;
@@ -189,16 +189,15 @@ async function createAdminGroup(conn: PoolConnection, sportcenterId: number): Pr
   );
   const groupId = groupResult.insertId;
 
-  // Add privileges 11 and 12
+  // Add privileges: 11, 12, 13, 24, 26, 28 (delete payments)
   try {
-    await conn.execute(
-      'INSERT INTO groups_privilege (groups_id, privilege_id) VALUES (?, 11)',
-      [groupId]
-    );
-    await conn.execute(
-      'INSERT INTO groups_privilege (groups_id, privilege_id) VALUES (?, 12)',
-      [groupId]
-    );
+    const privilegeIds = [11, 12, 13, 24, 26, 28];
+    for (const privilegeId of privilegeIds) {
+      await conn.execute(
+        'INSERT INTO groups_privilege (groups_id, privilege_id) VALUES (?, ?)',
+        [groupId, privilegeId]
+      );
+    }
   } catch {
     // Table might not exist or have different structure
     logger.debug({ groupId }, 'groups_privilege insert skipped');

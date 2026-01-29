@@ -254,13 +254,15 @@ export const COLLECT_ADMIN_INFO_FUNCTION = {
  */
 export const COLLECT_FACILITY_FUNCTION = {
   name: 'collect_facility',
-  description: 'Save a facility with its schedule information. Call this when the user has provided complete information for a facility including name, sport, and schedule details.',
+  description:
+    'Save a facility with its schedule information. Call this when the user has provided sport and schedule details for a facility. The name is OPTIONAL - if not provided, it will be auto-generated from the sport name (e.g., "Tenis 1", "Pádel 2").',
   parameters: {
     type: 'object',
     properties: {
       name: {
         type: 'string',
-        description: 'Name of the facility (e.g., "Court 1", "Main Pool", "Gym Area")',
+        description:
+          'Optional name of the facility. If not provided, will be auto-generated as "{SportName} {number}" (e.g., "Tenis 1", "Pádel 2")',
       },
       sportId: {
         type: 'number',
@@ -302,7 +304,7 @@ export const COLLECT_FACILITY_FUNCTION = {
         },
       },
     },
-    required: ['name', 'sportId', 'sportName', 'schedules'],
+    required: ['sportId', 'sportName', 'schedules'],
   },
 } as const;
 

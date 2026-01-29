@@ -1,0 +1,92 @@
+# Local development Docker setup for Sporttia ZERO
+# Usage: docker compose -f docker-compose.local.yml up
+#
+# Prerequisites:
+# - Copy .env.local.example to .env.local and fill in your API keys
+# - MySQL tunnel must be running for Sporttia DB: ssh -L 3311:sporttia-sql-pre:3306 sporttia-hub
+
+services:
+  # PostgreSQL database for Sporttia ZERO data
+  postgres:
+    image: postgres:16-alpine
+    container_name: sporttia-zero-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sporttia_zero
+      POSTGRES_PASSWORD: sporttia_zero_local
+      POSTGRES_DB: sporttia_zero
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sporttia_zero"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API server with hot reloading
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api.local
+    container_name: sporttia-zero-api-local
+    restart: unless-stopped
+    ports:
+      - "4500:4500"
+    environment:
+      - NODE_ENV=development
+      - PORT=4500
+      - DATABASE_URL=postgresql://sporttia_zero:sporttia_zero_local@postgres:5432/sporttia_zero
+      - CORS_ORIGIN=http://localhost:4501
+    env_file:
+      - .env.local
+    volumes:
+      - ./apps/api/src:/app/apps/api/src:ro
+      - ./packages/shared/src:/app/packages/shared/src:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # For MySQL tunnel access from host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Web frontend with hot reloading
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web.local
+    container_name: sporttia-zero-web-local
+    restart: unless-stopped
+    ports:
+      - "4501:4501"
+    environment:
+      - NODE_ENV=development
+      - PROXY_API_URL=http://api:4500
+      - PROXY_ADMIN_URL=http://admin:4502
+    volumes:
+      - ./apps/web/src:/app/apps/web/src:ro
+      - ./apps/web/public:/app/apps/web/public:ro
+      - ./apps/web/vite.config.js:/app/apps/web/vite.config.js:ro
+    depends_on:
+      - api
+
+  # Admin panel with hot reloading
+  admin:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.admin.local
+    container_name: sporttia-zero-admin-local
+    restart: unless-stopped
+    ports:
+      - "4502:4502"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./apps/admin/src:/app/apps/admin/src:ro
+      - ./apps/admin/public:/app/apps/admin/public:ro
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
