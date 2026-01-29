@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
+
+const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
 // Detect if running inside Docker container
 const isDocker = existsSync('/.dockerenv') || process.env.DOCKER_CONTAINER === 'true';
@@ -13,6 +15,9 @@ const adminTarget = process.env.PROXY_ADMIN_URL || (isDocker ? 'http://admin:450
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
