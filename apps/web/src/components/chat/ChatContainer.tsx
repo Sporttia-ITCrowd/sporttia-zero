@@ -11,6 +11,10 @@ import { api } from '../../lib/api';
 // Storage key for tracking if feedback was already shown for a conversation
 const FEEDBACK_SHOWN_KEY = 'sporttia_zero_feedback_shown';
 
+// Environment indicator
+const APP_ENV = import.meta.env.VITE_APP_ENV || 'pro';
+const IS_PRE = APP_ENV === 'pre';
+
 export function ChatContainer() {
   const { t } = useTranslation();
   const { messages, status, error, language, conversationId, sendMessage, clearError, resetConversation } = useChat();
@@ -79,6 +83,15 @@ export function ChatContainer() {
         <div className="flex gap-6 w-full max-w-6xl items-start">
           {/* Chat Panel */}
           <div className="flex-1 flex flex-col chat-panel max-w-2xl h-[calc(100vh-4rem)] lg:h-[calc(100vh-8rem)]">
+            {/* Pre-production banner */}
+            {IS_PRE && (
+              <div className="bg-amber-500 px-4 py-1 text-center">
+                <span className="text-xs font-medium text-amber-950">
+                  PRE-PRODUCTION ENVIRONMENT
+                </span>
+              </div>
+            )}
+
             {/* Green Header */}
             <header className="bg-primary px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">

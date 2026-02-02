@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+// Environment indicator
+const APP_ENV = import.meta.env.VITE_APP_ENV || 'pro';
+const IS_PRE = APP_ENV === 'pre';
+
 // Navigation item type
 interface NavItem {
   name: string;
@@ -80,7 +84,16 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className={`min-h-screen bg-gray-100 ${IS_PRE ? 'pt-6' : ''}`}>
+      {/* Pre-production banner */}
+      {IS_PRE && (
+        <div className="bg-amber-500 px-4 py-1 text-center fixed top-0 left-0 right-0 z-[60]">
+          <span className="text-xs font-medium text-amber-950">
+            PRE-PRODUCTION ENVIRONMENT
+          </span>
+        </div>
+      )}
+
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div

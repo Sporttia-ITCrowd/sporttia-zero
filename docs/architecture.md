@@ -878,10 +878,10 @@ components:
 **Key Interfaces:**
 - `createSportcenter(data: CreateSportcenterInput): Promise<CreateSportcenterResult>` - Creates complete sports center with:
   - Customer record
-  - Sportcenter record (visible=0, zero=true)
+  - Sportcenter record (visible=1, zero=true)
   - 3-month subscription (ACTIVE status)
   - 3 monthly licences (PAID status)
-  - Admin group with privileges 11 and 12
+  - Admin group with privileges 11, 12, 13, 24, 26, 28
   - Admin user with generated login/password
   - Purse for admin user
   - Facilities with terrain, prices, schedules, and slots
@@ -1178,7 +1178,7 @@ SPORTTIA_DB_NAME=sporttia_pre
 **Integration Notes:**
 - All operations wrapped in MySQL transaction for atomicity (rollback on failure)
 - Province and city created if they don't exist
-- Sportcenter created with `visibility=0` (hidden) and `zero=true` flag
+- Sportcenter created with `visible=1` (public) and `zero=true` flag
 - 3-month subscription with ACTIVE status and 3 PAID licences created
 - Admin user created with generated login and temporary password (MD5 hashed)
 - Connection pool managed with mysql2/promise
@@ -2475,8 +2475,10 @@ VITE_API_URL=http://localhost:3001/api
 NODE_ENV=development
 PORT=3001
 
-# Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sporttia_zero
+# Database (PostgreSQL) - Cloud SQL sporttia-hub
+# PRE: postgresql://sporttia:PASSWORD@10.63.50.7:5432/sporttia_zero?sslmode=require
+# PRO: postgresql://sporttia:PASSWORD@10.63.50.5:5432/sporttia_zero?sslmode=require
+DATABASE_URL=postgresql://sporttia:PASSWORD@10.63.50.7:5432/sporttia_zero?sslmode=require
 
 # OpenAI
 OPENAI_API_KEY=sk-...

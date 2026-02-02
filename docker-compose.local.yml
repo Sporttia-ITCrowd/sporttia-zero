@@ -4,27 +4,13 @@
 # Prerequisites:
 # - Copy .env.local.example to .env.local and fill in your API keys
 # - MySQL tunnel must be running for Sporttia DB: ssh -L 3311:sporttia-sql-pre:3306 sporttia-hub
+# - VPN connection for Cloud SQL PostgreSQL access
+#
+# Database environments (via VPN):
+# - PRE: 10.63.50.7 (sporttia-hub-pre)
+# - PRO: 10.63.50.5 (sporttia-hub)
 
 services:
-  # PostgreSQL database for Sporttia ZERO data
-  postgres:
-    image: postgres:16-alpine
-    container_name: sporttia-zero-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: sporttia_zero
-      POSTGRES_PASSWORD: sporttia_zero_local
-      POSTGRES_DB: sporttia_zero
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sporttia_zero"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # API server with hot reloading
   api:
     build:
@@ -37,16 +23,13 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=4500
-      - DATABASE_URL=postgresql://sporttia_zero:sporttia_zero_local@postgres:5432/sporttia_zero
+      - DATABASE_URL=postgresql://sporttia:Trebujena1!@10.63.50.7:5432/sporttia_zero?sslmode=require
       - CORS_ORIGIN=http://localhost:4501
     env_file:
       - .env.local
     volumes:
       - ./apps/api/src:/app/apps/api/src:ro
       - ./packages/shared/src:/app/packages/shared/src:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
     # For MySQL tunnel access from host
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -62,6 +45,7 @@ services:
       - "4501:4501"
     environment:
       - NODE_ENV=development
+      - VITE_APP_ENV=pre
       - PROXY_API_URL=http://api:4500
       - PROXY_ADMIN_URL=http://admin:4502
     volumes:
@@ -82,11 +66,11 @@ services:
       - "4502:4502"
     environment:
       - NODE_ENV=development
+      - VITE_APP_ENV=pre
     volumes:
       - ./apps/admin/src:/app/apps/admin/src:ro
       - ./apps/admin/public:/app/apps/admin/public:ro
     depends_on:
       - api
 
-volumes:
-  postgres_data:
+# No local volumes needed - using Cloud SQL PostgreSQL
