@@ -1,0 +1,74 @@
+# Sporttia ZERO - Cloud deployment (ulpius)
+# Usage: docker compose -f docker-compose.cloud.yml up -d
+#
+# URLs:
+# - Web: https://zero.ulpius.sporttia.com/
+# - API: https://zero.ulpius.sporttia.com/api
+# - Admin: https://zero.ulpius.sporttia.com/admin
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: sporttia-zero-api
+    restart: unless-stopped
+    ports:
+      - "4500:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sporttia-zero-network
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: sporttia-zero-web
+    restart: unless-stopped
+    ports:
+      - "4501:80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sporttia-zero-network
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    container_name: sporttia-zero-admin
+    restart: unless-stopped
+    ports:
+      - "4502:80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sporttia-zero-network
+
+networks:
+  sporttia-zero-network:
+    driver: bridge
