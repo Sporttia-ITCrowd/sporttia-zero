@@ -1,23 +1,21 @@
-# PRODUCTION environment configuration for Sporttia ZERO API
-# Deploy to: /opt/sporttia-zero/api/.env
+# PRODUCTION environment configuration for Sporttia ZERO
+# Deploy to: sporttia-hub as .env.pro
+# Docker: docker compose -f docker-compose.pro.yml up -d
 
 # Server Configuration
-PORT=3000
+PORT=4500
 NODE_ENV=production
 LOG_LEVEL=info
-
-# Frontend environment (set during build)
-# VITE_APP_ENV=pro
 
 # Database (PostgreSQL) - Cloud SQL sporttia-hub (PRO)
 # Private IP 10.63.50.5 accessible from GCP VPC
 DATABASE_URL=postgresql://sporttia:Trebujena1!@10.63.50.5:5432/sporttia_zero?sslmode=require
 
 # OpenAI
-OPENAI_API_KEY=sk-proj-CHANGE_ME
+OPENAI_API_KEY=CHANGE_ME
 OPENAI_MODEL=gpt-4o-mini
 
-# Sporttia API
+# Sporttia API - PRODUCTION
 SPORTTIA_API_URL=https://api.sporttia.com/v7
 
 # Sporttia MySQL Database (for ZeroService) - PRODUCTION

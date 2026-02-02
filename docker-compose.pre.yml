@@ -1,0 +1,104 @@
+# Sporttia ZERO - PRE-PRODUCTION deployment (sporttia-hub)
+# Environment: PRE-PRODUCTION (connects to sporttia-hub-pre database)
+#
+# Setup:
+#   cd ~/sporttia-zero
+#   cp deploy/.env.pre .env.pre
+#   # Edit .env.pre with real credentials
+#   docker compose -f docker-compose.pre.yml up -d
+#
+# URLs:
+# - Web: https://zero-pre.sporttia.com/
+# - API: https://zero-pre.sporttia.com/api
+# - Backoffice: https://zero-pre.sporttia.com/backoffice
+
+services:
+  nginx-pre:
+    image: nginx:alpine
+    container_name: sporttia-zero-nginx-pre
+    restart: unless-stopped
+    ports:
+      - "81:80"
+    volumes:
+      - ./deploy/sporttia-hub/pre-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api-pre
+      - web-pre
+      - admin-pre
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sporttia-zero-pre-network
+
+  api-pre:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: sporttia-zero-api-pre
+    restart: unless-stopped
+    expose:
+      - "4500"
+    environment:
+      - NODE_ENV=production
+      - PORT=4500
+    env_file:
+      - .env.pre
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4500/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - sporttia-zero-pre-network
+
+  web-pre:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        - VITE_APP_ENV=pre
+    container_name: sporttia-zero-web-pre
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api-pre
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sporttia-zero-pre-network
+
+  admin-pre:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        - VITE_APP_ENV=pre
+    container_name: sporttia-zero-admin-pre
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - api-pre
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sporttia-zero-pre-network
+
+networks:
+  sporttia-zero-pre-network:
+    driver: bridge
