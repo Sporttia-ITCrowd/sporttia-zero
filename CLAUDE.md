@@ -4,7 +4,7 @@
 
 | Command | Environment | Target | Description |
 |---------|-------------|--------|-------------|
-| `/ulpius_deploy` | DEV | ulpius | Commit, push, and deploy to development |
+| `/deploy_ulpius` | DEV | ulpius | Commit, push, and deploy to development |
 | `/deploy_pre` | PRE | sporttia-zero | Deploy to pre-production |
 | `/deploy_pro` | PRO | sporttia-zero | Deploy to production |
 

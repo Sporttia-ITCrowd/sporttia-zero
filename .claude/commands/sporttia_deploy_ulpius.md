@@ -1,4 +1,4 @@
-# /ulpius_deploy Command
+# /deploy_ulpius Command
 
 When this command is used, execute the following deployment workflow for Sporttia ZERO on ulpius.
 
@@ -99,11 +99,11 @@ After testing on DEV, deploy to PRE with `/deploy_pre`
 ## Arguments
 
 The command accepts optional arguments:
-- `/ulpius_deploy` - Bump patch version, auto-generate commit message
-- `/ulpius_deploy "Fixed login bug"` - Bump patch version, use provided commit message
-- `/ulpius_deploy --minor` - Bump minor version (0.1.0 → 0.2.0)
-- `/ulpius_deploy --major` - Bump major version (0.1.0 → 1.0.0)
-- `/ulpius_deploy --minor "New feature"` - Bump minor version with custom message
+- `/deploy_ulpius` - Bump patch version, auto-generate commit message
+- `/deploy_ulpius "Fixed login bug"` - Bump patch version, use provided commit message
+- `/deploy_ulpius --minor` - Bump minor version (0.1.0 → 0.2.0)
+- `/deploy_ulpius --major` - Bump major version (0.1.0 → 1.0.0)
+- `/deploy_ulpius --minor "New feature"` - Bump minor version with custom message
 
 ## Error Handling
 
