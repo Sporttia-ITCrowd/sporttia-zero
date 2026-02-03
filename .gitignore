@@ -64,3 +64,4 @@ pids/
 *.pid
 *.seed
 *.pid.lock
+.playwright-mcp/
