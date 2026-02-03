@@ -13,6 +13,7 @@ import type {
 import { createLogger } from '../lib/logger';
 import { normalizeEmail, validateFacilitySchedules } from '../lib/validation';
 import { logInternalError } from '../services/analytics.service';
+import { getDefaultCurrencyForCountry } from '../services/city-lookup.service';
 
 const logger = createLogger('conversation-repository');
 
@@ -172,11 +173,20 @@ export const conversationRepository = {
     id: string,
     info: { name?: string; city?: string; country?: string; placeId?: string }
   ): Promise<Conversation | null> {
+    // Derive currency from country code
+    const countryCode = info.country?.toUpperCase();
+    const currency = countryCode ? getDefaultCurrencyForCountry(countryCode) : undefined;
+
+    if (currency) {
+      logger.info({ id, countryCode, currency }, 'Derived currency from country code');
+    }
+
     return this.updateCollectedData(id, (current) => ({
       ...current,
       ...(info.name && { sportsCenterName: info.name }),
       ...(info.city && { city: info.city }),
-      ...(info.country && { country: info.country.toUpperCase() }), // Normalize to uppercase
+      ...(countryCode && { country: countryCode }),
+      ...(currency && { currency }), // Auto-derived from country
       ...(info.placeId && { placeId: info.placeId }), // Google Place ID for precise city resolution
     }));
   },

@@ -383,10 +383,10 @@ sporttia-zero/
 4. `GET /v7/cities` implemented - looks up city ID by name for sports center location
 5. ZeroService created to handle sports center creation directly in database:
    - Creates customer record
-   - Creates sportcenter record with visibility=0 (hidden) and zero=true flag
+   - Creates sportcenter record with visible=1 (public) and zero=true flag
    - Creates 3-month subscription with ACTIVE status
    - Creates 3 monthly licences with PAID status
-   - Creates admin group with privileges 11 and 12
+   - Creates admin group with privileges 11, 12, 13, 24, 26, 28
    - Creates admin user with generated login and temporary password
    - Creates purse for admin user
    - Creates facilities (fields) with terrain, prices, schedules, and slots

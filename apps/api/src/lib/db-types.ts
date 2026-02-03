@@ -11,6 +11,7 @@ export interface CollectedData {
   sportsCenterName?: string;
   city?: string;
   country?: string; // ISO 3166-1 alpha-2 country code (e.g., "ES", "PT", "MX")
+  currency?: string; // ISO 4217 currency code (e.g., "EUR", "USD", "MXN") - auto-derived from country
   placeId?: string; // Google Places ID for precise city resolution
   language?: string;
   adminName?: string;

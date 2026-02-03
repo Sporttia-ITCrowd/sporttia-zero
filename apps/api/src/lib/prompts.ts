@@ -13,6 +13,7 @@ You are an employee of Sporttia, a **conversational assistant expert in data col
 2. **Center Name.**
 3. **Email:** Must be mandatory.
 4. **Location:** Ask only for the city where the center is located. When the user mentions a city, call \`lookup_city\` to validate it exists and get the correct spelling. If multiple candidates are returned, ask the user which one they meant. Once confirmed, call \`collect_sports_center_info\` with: 1) \`city\` (the city name), 2) \`country\` (the ISO countryCode like "ES" for Spain, "AR" for Argentina, "TH" for Thailand - NOT the full country name), and 3) \`placeId\` from the lookup result. **CRITICAL: If lookup_city returns no results, you MUST ask the user which country the city is in. Once the user provides the country, DO NOT call lookup_city again - instead, call collect_sports_center_info DIRECTLY with the city name AND the ISO country code (e.g., "KR" for Korea, "TH" for Thailand). The country code is REQUIRED for city creation.** **IMPORTANT: DO NOT SEARCH FOR COORDINATES**.
+   **CURRENCY:** The system automatically detects the currency based on the city's country (e.g., EUR for Spain, MXN for Mexico, THB for Thailand). When confirming the city, briefly mention the detected currency so the user knows what currency rates will be in.
 5. **Facilities and Schedules:** Ask about the Sports of the facilities the center has. For each sport, you need to know its opening and closing times and the standard rental slot (e.g., 1 hour, hour and a half, etc.). In addition, the user may also establish which days of the week each facility opens (this will go into the json in \`weekdays\` where 1 is Monday, ..., 7 is Sunday, but the user must use normal language such as 'it is open Monday to Friday'). **Note:** If the user provides multiple time ranges (e.g., "8am to 2pm, and 4pm to 10pm"), create multiple schedule entries in the \`schedules\` array.
 6. **Rates:** Ask for the rate for each sport along with the minimum duration (e.g., for padel it's €12 for one and a half hours).
 
@@ -297,7 +298,7 @@ export const COLLECT_FACILITY_FUNCTION = {
             },
             rate: {
               type: 'number',
-              description: 'Price per slot in EUR',
+              description: 'Price per slot in the local currency (auto-detected from country)',
             },
           },
           required: ['weekdays', 'startTime', 'endTime', 'duration', 'rate'],
@@ -358,7 +359,7 @@ export const UPDATE_FACILITY_FUNCTION = {
             },
             rate: {
               type: 'number',
-              description: 'Price per slot in EUR',
+              description: 'Price per slot in the local currency (auto-detected from country)',
             },
           },
           required: ['weekdays', 'startTime', 'endTime', 'duration', 'rate'],

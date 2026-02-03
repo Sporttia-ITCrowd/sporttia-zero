@@ -5,6 +5,7 @@ import { createLogger } from '../lib/logger';
 import type { CollectedFacility } from '../lib/db-types';
 import { logOpenAIApiError } from './analytics.service';
 import { searchCities, isGooglePlacesConfigured, type PlaceCandidate } from './google-places.service';
+import { getDefaultCurrencyForCountry } from './city-lookup.service';
 
 const logger = createLogger('ai-service');
 
@@ -241,21 +242,27 @@ export async function generateAIResponse(
               if (candidates.length === 0) {
                 // IMPORTANT: If countryHint was provided, tell the AI to use it
                 if (args.countryHint) {
-                  toolResponse.message = `No cities found for "${args.query}" in Google Places. IMPORTANT: Do NOT call lookup_city again. Instead, call collect_sports_center_info DIRECTLY with city: "${args.query}" and country: "${args.countryHint}". The city will be created with this country code.`;
-                  toolResponse.data = { candidates: [], query: args.query, countryHint: args.countryHint, useCountryHint: true, skipLookup: true };
+                  const currency = getDefaultCurrencyForCountry(args.countryHint);
+                  toolResponse.message = `No cities found for "${args.query}" in Google Places. IMPORTANT: Do NOT call lookup_city again. Instead, call collect_sports_center_info DIRECTLY with city: "${args.query}" and country: "${args.countryHint}". The city will be created with this country code. Currency for this country is ${currency}.`;
+                  toolResponse.data = { candidates: [], query: args.query, countryHint: args.countryHint, currency, useCountryHint: true, skipLookup: true };
                 } else {
                   toolResponse.message = `No cities found for "${args.query}". IMPORTANT: Ask the user which country the city is in. Once they provide the country, do NOT call lookup_city again - instead call collect_sports_center_info DIRECTLY with city: "${args.query}" and the ISO country code (e.g., "KR" for Korea, "TH" for Thailand).`;
                   toolResponse.data = { candidates: [], query: args.query, needsCountry: true, skipLookup: true };
                 }
               } else if (candidates.length === 1) {
-                toolResponse.message = `Found city: ${candidates[0].name}, ${candidates[0].country} (${candidates[0].countryCode})`;
+                const currency = getDefaultCurrencyForCountry(candidates[0].countryCode);
+                toolResponse.message = `Found city: ${candidates[0].name}, ${candidates[0].country} (${candidates[0].countryCode}). Currency: ${currency}`;
                 toolResponse.data = {
                   candidates,
-                  suggestion: `City found: ${candidates[0].name}, ${candidates[0].country}. IMPORTANT: When calling collect_sports_center_info, include country: "${candidates[0].countryCode}" and placeId: "${candidates[0].placeId}"`,
+                  currency,
+                  suggestion: `City found: ${candidates[0].name}, ${candidates[0].country}. Currency for this country is ${currency}. IMPORTANT: When calling collect_sports_center_info, include country: "${candidates[0].countryCode}" and placeId: "${candidates[0].placeId}". Inform the user that rates will be in ${currency}.`,
                 };
               } else {
                 const candidateList = candidates
-                  .map((c, i) => `${i + 1}. ${c.name}, ${c.country} (${c.countryCode})`)
+                  .map((c, i) => {
+                    const currency = getDefaultCurrencyForCountry(c.countryCode);
+                    return `${i + 1}. ${c.name}, ${c.country} (${c.countryCode}, ${currency})`;
+                  })
                   .join('; ');
                 toolResponse.message = `Multiple cities found: ${candidateList}. Ask user to clarify, then use the countryCode and placeId when calling collect_sports_center_info.`;
                 toolResponse.data = { candidates, needsClarification: true };

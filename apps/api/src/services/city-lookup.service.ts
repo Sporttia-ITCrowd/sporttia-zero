@@ -333,7 +333,7 @@ async function getOrCreateCountryWithCurrency(
 /**
  * Get default currency for a country code
  */
-function getDefaultCurrencyForCountry(code: string): string {
+export function getDefaultCurrencyForCountry(code: string): string {
   const currencies: Record<string, string> = {
     // Eurozone
     ES: 'EUR',
