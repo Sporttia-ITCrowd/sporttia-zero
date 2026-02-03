@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 // Environment indicator
 const APP_ENV = import.meta.env.VITE_APP_ENV || 'pro';
 const IS_PRE = APP_ENV === 'pre';
+const IS_DEV = APP_ENV === 'dev';
+const SHOW_ENV_BANNER = IS_PRE || IS_DEV;
 
 // Navigation item type
 interface NavItem {
@@ -84,12 +86,12 @@ export function AdminLayout() {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-100 ${IS_PRE ? 'pt-6' : ''}`}>
-      {/* Pre-production banner */}
-      {IS_PRE && (
-        <div className="bg-amber-500 px-4 py-1 text-center fixed top-0 left-0 right-0 z-[60]">
-          <span className="text-xs font-medium text-amber-950">
-            PRE-PRODUCTION ENVIRONMENT
+    <div className="min-h-screen bg-gray-100">
+      {/* Environment indicator - bottom left */}
+      {SHOW_ENV_BANNER && (
+        <div className={`fixed bottom-4 left-4 z-[60] px-3 py-1.5 rounded-full shadow-lg ${IS_DEV ? 'bg-blue-500' : 'bg-amber-500'}`}>
+          <span className={`text-xs font-medium ${IS_DEV ? 'text-blue-950' : 'text-amber-950'}`}>
+            {IS_DEV ? 'DEV' : 'PRE'}
           </span>
         </div>
       )}

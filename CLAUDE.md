@@ -1,7 +1,17 @@
 # Project Sporttia ZERO
 
-## Running
-When the project is raunning in local, use these ports:
+## Deployment Commands
+
+| Command | Environment | Target | Description |
+|---------|-------------|--------|-------------|
+| `/ulpius_deploy` | DEV | ulpius | Commit, push, and deploy to development |
+| `/deploy_pre` | PRE | sporttia-zero | Deploy to pre-production |
+| `/deploy_pro` | PRO | sporttia-zero | Deploy to production |
+
+**Flow**: DEV → PRE → PRO
+
+## Running Locally
+When the project is running in local, use these ports:
 - API server: 4500
 - Web: 4501
 - Admin: 4502

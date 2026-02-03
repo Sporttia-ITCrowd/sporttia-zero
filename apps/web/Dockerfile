@@ -1,6 +1,9 @@
 # Build stage
 FROM node:20-alpine AS builder
 
+# Build arguments for Vite
+ARG VITE_APP_ENV=pro
+
 WORKDIR /app
 
 # Copy root package files for workspace setup
@@ -17,7 +20,7 @@ COPY apps/web ./apps/web
 
 # Build shared package first, then web
 RUN npm run build -w @sporttia-zero/shared
-RUN npm run build -w @sporttia-zero/web
+RUN VITE_APP_ENV=${VITE_APP_ENV} npm run build -w @sporttia-zero/web
 
 # Production stage with nginx
 FROM nginx:alpine AS production

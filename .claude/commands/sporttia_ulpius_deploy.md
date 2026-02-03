@@ -81,14 +81,20 @@ docker compose -f docker-compose.cloud.yml ps
 ```
 
 Report the status and provide the URLs:
-- Web: https://zero.ulpius.sporttia.com/
-- API: https://zero.ulpius.sporttia.com/api
-- Admin: https://zero.ulpius.sporttia.com/admin
+- Web: https://zero-ulpius.sporttia.com/
+- API: https://zero-ulpius.sporttia.com/api
+- Backoffice: https://zero-ulpius.sporttia.com/backoffice
 
-Direct port access (internal):
-- API: http://localhost:4500
-- Web: http://localhost:4501
-- Admin: http://localhost:4502
+## Environment
+
+- **Target**: ulpius (10.132.0.123)
+- **Database**: sporttia-hub-pre (10.63.50.7)
+- **Sporttia API**: preapi.sporttia.com
+- **UI Banner**: Blue "DEVELOPMENT ENVIRONMENT"
+
+## Next Steps
+
+After testing on DEV, deploy to PRE with `/deploy_pre`
 
 ## Arguments
 

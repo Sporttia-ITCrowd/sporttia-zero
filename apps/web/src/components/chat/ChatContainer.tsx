@@ -14,6 +14,8 @@ const FEEDBACK_SHOWN_KEY = 'sporttia_zero_feedback_shown';
 // Environment indicator
 const APP_ENV = import.meta.env.VITE_APP_ENV || 'pro';
 const IS_PRE = APP_ENV === 'pre';
+const IS_DEV = APP_ENV === 'dev';
+const SHOW_ENV_BANNER = IS_PRE || IS_DEV;
 
 export function ChatContainer() {
   const { t } = useTranslation();
@@ -78,19 +80,20 @@ export function ChatContainer() {
 
   return (
     <div className="flex min-h-screen decorative-bg">
+      {/* Environment indicator - bottom left */}
+      {SHOW_ENV_BANNER && (
+        <div className={`fixed bottom-4 left-4 z-50 px-3 py-1.5 rounded-full shadow-lg ${IS_DEV ? 'bg-blue-500' : 'bg-amber-500'}`}>
+          <span className={`text-xs font-medium ${IS_DEV ? 'text-blue-950' : 'text-amber-950'}`}>
+            {IS_DEV ? 'DEV' : 'PRE'}
+          </span>
+        </div>
+      )}
+
       {/* Main content wrapper */}
       <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
         <div className="flex gap-6 w-full max-w-6xl items-start">
           {/* Chat Panel */}
           <div className="flex-1 flex flex-col chat-panel max-w-2xl h-[calc(100vh-4rem)] lg:h-[calc(100vh-8rem)]">
-            {/* Pre-production banner */}
-            {IS_PRE && (
-              <div className="bg-amber-500 px-4 py-1 text-center">
-                <span className="text-xs font-medium text-amber-950">
-                  PRE-PRODUCTION ENVIRONMENT
-                </span>
-              </div>
-            )}
 
             {/* Green Header */}
             <header className="bg-primary px-6 py-4 flex items-center justify-between">
