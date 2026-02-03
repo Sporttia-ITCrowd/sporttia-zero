@@ -7,9 +7,9 @@ PORT=4500
 NODE_ENV=production
 LOG_LEVEL=info
 
-# Database (PostgreSQL) - Cloud SQL sporttia-hub (PRO)
-# Private IP 10.63.50.5 accessible from GCP VPC
-DATABASE_URL=postgresql://sporttia:Trebujena2024%40@10.63.50.5:5432/sporttia_zero?sslmode=require
+# Database (PostgreSQL) - Cloud SQL sporttia-db-hub-pro (PRO)
+# Private IP 10.63.50.14 accessible from GCP VPC
+DATABASE_URL=postgresql://sporttia:Trebujena1!@10.63.50.14:5432/sporttia_zero?sslmode=require
 
 # OpenAI
 OPENAI_API_KEY=CHANGE_ME
