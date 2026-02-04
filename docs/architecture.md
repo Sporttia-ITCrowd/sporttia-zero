@@ -2475,7 +2475,7 @@ VITE_API_URL=http://localhost:3001/api
 NODE_ENV=development
 PORT=3001
 
-# Database (PostgreSQL) - Cloud SQL sporttia-hub
+# Database (PostgreSQL) - Cloud SQL sporttia-db-hub-pre/sporttia-db-hub-pro
 # PRE: postgresql://sporttia:PASSWORD@10.63.50.7:5432/sporttia_zero?sslmode=require
 # PRO: postgresql://sporttia:PASSWORD@10.63.50.5:5432/sporttia_zero?sslmode=require
 DATABASE_URL=postgresql://sporttia:PASSWORD@10.63.50.7:5432/sporttia_zero?sslmode=require

@@ -5,22 +5,22 @@ This document describes the deployment infrastructure and procedures for Sportti
 ## Deployment Flow
 
 ```
-┌─────────────┐      ┌─────────────┐      ┌─────────────┐
-│     DEV     │ ───▶ │     PRE     │ ───▶ │     PRO     │
-│   (ulpius)  │      │(sporttia-hub)│     │(sporttia-hub)│
-└─────────────┘      └─────────────┘      └─────────────┘
- /ulpius_deploy       /deploy_pre          /deploy_pro
+┌─────────────┐      ┌──────────────────┐      ┌──────────────────┐
+│     DEV     │ ───▶ │       PRE        │ ───▶ │       PRO        │
+│   (ulpius)  │      │(sporttia-hub-pre)│      │(sporttia-hub-pro)│
+└─────────────┘      └──────────────────┘      └──────────────────┘
+ /deploy_ulpius        /deploy_pre               /deploy_pro
 ```
 
 | Environment | URL | Database | Banner |
 |-------------|-----|----------|--------|
-| **DEV** | zero-ulpius.sporttia.com | sporttia-hub-pre | Blue "DEVELOPMENT" |
-| **PRE** | zero-pre.sporttia.com | sporttia-hub-pre | Amber "PRE-PRODUCTION" |
-| **PRO** | zero.sporttia.com | sporttia-hub | None |
+| **DEV** | zero-ulpius.sporttia.com | sporttia-db-hub-pre | Blue "DEVELOPMENT" |
+| **PRE** | zero-pre.sporttia.com | sporttia-db-hub-pre | Amber "PRE-PRODUCTION" |
+| **PRO** | zero.sporttia.com | sporttia-db-hub-pro | None |
 
 ### Workflow
 
-1. **Develop on DEV**: Code and test on ulpius using `/ulpius_deploy`
+1. **Develop on DEV**: Code and test on ulpius using `/deploy_ulpius`
 2. **Deploy to PRE**: Test in pre-production using `/deploy_pre`
 3. **Deploy to PRO**: Release to production using `/deploy_pro`
 
@@ -35,7 +35,8 @@ This document describes the deployment infrastructure and procedures for Sportti
 | Instance | Type | Internal IP | Purpose |
 |----------|------|-------------|---------|
 | `sporttia-proxy` | e2-standard-2 | 10.132.0.19 | Reverse proxy (nginx + SSL) |
-| `sporttia-hub` | e2-standard-4 | 10.132.0.11 | Application server (PRE + PRO) |
+| `sporttia-hub-pre` | e2-standard-4 | 10.132.0.111 | Pre-production server |
+| `sporttia-hub-pro` | e2-standard-4 | 10.132.0.112 | Production server |
 | `ulpius` | e2-standard-2 | 10.132.0.123 | Development server |
 
 **Zone:** europe-west1-b
@@ -79,30 +80,34 @@ This document describes the deployment infrastructure and procedures for Sportti
 │  ┌────────────────────────────────────────────────────────────────────────┐  │
 │  │                         Nginx + SSL (Certbot)                          │  │
 │  │                                                                        │  │
-│  │  zero.sporttia.com     → sporttia-hub:80  (PRO containers)             │  │
-│  │  zero-pre.sporttia.com → sporttia-hub:81  (PRE containers)             │  │
+│  │  zero.sporttia.com     → sporttia-hub-pro:80  (PRO)                     │  │
+│  │  zero-pre.sporttia.com → sporttia-hub-pre:80  (PRE)                    │  │
 │  └────────────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────────────┘
                                            │
                                            ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                      sporttia-hub (10.132.0.11)                              │
+│                    sporttia-hub-pro (10.132.0.112)                            │
 │                                                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐     │
 │  │                    Docker Compose (PRO - port 80)                   │     │
 │  │                                                                     │     │
 │  │  ┌───────────┐    ┌───────────┐  ┌───────────┐  ┌───────────┐      │     │
-│  │  │ nginx-pro │───▶│  web-pro  │  │  api-pro  │  │ admin-pro │      │     │
+│  │  │   nginx   │───▶│    web    │  │    api    │  │   admin   │      │     │
 │  │  │    :80    │───▶│    :80    │  │   :4500   │  │    :80    │      │     │
 │  │  └───────────┘    └───────────┘  └───────────┘  └───────────┘      │     │
 │  └─────────────────────────────────────────────────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    sporttia-hub-pre (10.132.0.111)                            │
 │                                                                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐     │
-│  │                    Docker Compose (PRE - port 81)                   │     │
+│  │                    Docker Compose (PRE - port 80)                   │     │
 │  │                                                                     │     │
 │  │  ┌───────────┐    ┌───────────┐  ┌───────────┐  ┌───────────┐      │     │
-│  │  │ nginx-pre │───▶│  web-pre  │  │  api-pre  │  │ admin-pre │      │     │
-│  │  │    :81    │───▶│    :80    │  │   :4500   │  │    :80    │      │     │
+│  │  │   nginx   │───▶│    web    │  │    api    │  │   admin   │      │     │
+│  │  │    :80    │───▶│    :80    │  │   :4500   │  │    :80    │      │     │
 │  │  └───────────┘    └───────────┘  └───────────┘  └───────────┘      │     │
 │  └─────────────────────────────────────────────────────────────────────┘     │
 └──────────────────────────────────────────────────────────────────────────────┘
@@ -110,20 +115,30 @@ This document describes the deployment infrastructure and procedures for Sportti
 
 ## Directory Structure
 
-### sporttia-hub instance
+### sporttia-hub-pro instance
 
 ```
-~/sporttia-zero/
-├── docker-compose.pre.yml    # PRE environment
+~/Projects/sporttia-zero/
 ├── docker-compose.pro.yml    # PRO environment
-├── .env.pre                  # PRE environment variables
 ├── .env.pro                  # PRO environment variables
 ├── apps/
 ├── packages/
 └── deploy/
     └── sporttia-hub/
-        ├── pre-nginx.conf    # Nginx config for PRE container
         └── pro-nginx.conf    # Nginx config for PRO container
+```
+
+### sporttia-hub-pre instance
+
+```
+~/Projects/sporttia-zero/
+├── docker-compose.pre.yml    # PRE environment
+├── .env.pre                  # PRE environment variables
+├── apps/
+├── packages/
+└── deploy/
+    └── sporttia-hub/
+        └── pre-nginx.conf    # Nginx config for PRE container
 ```
 
 ### sporttia-proxy instance
@@ -165,30 +180,46 @@ docker-compose.cloud.yml  # DEV Docker Compose (ulpius)
 
 ## Initial Setup
 
-### 1. Setup sporttia-hub instance
+### 1. Setup sporttia-hub-pro instance
 
 ```bash
-# SSH to sporttia-hub
-gcloud compute ssh sporttia-hub --zone=europe-west1-b --project=atlantean-app-120410
+# SSH to sporttia-hub-pro
+gcloud compute ssh sporttia-hub-pro --zone=europe-west1-b
 
 # Clone repo
-cd ~
+cd ~/Projects
 git clone git@github.com:sporttia/sporttia-zero.git
 cd sporttia-zero
 
-# Copy environment files
-cp deploy/.env.pre .env.pre
+# Copy environment file
 cp deploy/.env.pro .env.pro
 
 # Edit with real credentials
-nano .env.pre  # Set: OPENAI_API_KEY, ADMIN_PASSWORD, GOOGLE_PLACES_API_KEY
 nano .env.pro  # Set: OPENAI_API_KEY, ADMIN_PASSWORD, GOOGLE_PLACES_API_KEY
 
-# Start PRE environment
-docker compose -f docker-compose.pre.yml up -d
-
 # Start PRO environment
-docker compose -f docker-compose.pro.yml up -d
+sudo docker compose -f docker-compose.pro.yml up -d
+```
+
+### 1b. Setup sporttia-hub-pre instance
+
+```bash
+# SSH to sporttia-hub-pre
+gcloud compute ssh sporttia-hub-pre --zone=europe-west1-b
+
+# Clone repo
+cd ~/Projects
+git clone git@github.com:sporttia/sporttia-zero.git
+cd sporttia-zero
+
+# Copy environment file
+cp deploy/.env.pre .env.pre
+
+# Edit with real credentials
+nano .env.pre  # Set: OPENAI_API_KEY, ADMIN_PASSWORD, GOOGLE_PLACES_API_KEY
+
+# Start PRE environment
+sudo docker compose -f docker-compose.pre.yml up -d
 ```
 
 ### 2. Setup sporttia-proxy (nginx + SSL)
@@ -218,7 +249,7 @@ sudo systemctl reload nginx
 
 ### 3. Firewall Rules
 
-A firewall rule is needed to allow sporttia-proxy to access ports 80 and 81 on sporttia-hub.
+A firewall rule is needed to allow sporttia-proxy to access port 80 on sporttia-hub-pre and sporttia-hub-pro.
 
 ## Deploying Updates
 
@@ -231,7 +262,7 @@ A firewall rule is needed to allow sporttia-proxy to access ports 80 and 81 on s
 
 Or manually:
 ```bash
-gcloud compute ssh sporttia-hub --zone=europe-west1-b --project=atlantean-app-120410 --command="cd ~/sporttia-zero && git pull origin master && docker compose -f docker-compose.pre.yml build && docker compose -f docker-compose.pre.yml up -d"
+gcloud compute ssh sporttia-hub-pre --zone=europe-west1-b --command="cd ~/Projects/sporttia-zero && git pull && sudo docker-compose -f docker-compose.pre.yml build && sudo docker-compose -f docker-compose.pre.yml up -d"
 ```
 
 ### Deploy to PRO
@@ -243,7 +274,7 @@ gcloud compute ssh sporttia-hub --zone=europe-west1-b --project=atlantean-app-12
 
 Or manually:
 ```bash
-gcloud compute ssh sporttia-hub --zone=europe-west1-b --project=atlantean-app-120410 --command="cd ~/sporttia-zero && git pull origin master && docker compose -f docker-compose.pro.yml build && docker compose -f docker-compose.pro.yml up -d"
+gcloud compute ssh sporttia-hub-pro --zone=europe-west1-b --command="cd ~/Projects/sporttia-zero && git pull && sudo docker compose -f docker-compose.pro.yml build && sudo docker compose -f docker-compose.pro.yml up -d"
 ```
 
 ## DNS Configuration
@@ -255,22 +286,26 @@ Configure DNS in OVH to point to **sporttia-proxy**:
 | A | zero | 35.241.200.190 |
 | A | zero-pre | 35.241.200.190 |
 
-> **Note:** DNS points to sporttia-proxy which handles SSL termination and routes to sporttia-hub.
+> **Note:** DNS points to sporttia-proxy which handles SSL termination and routes to sporttia-hub-pre/sporttia-hub-pro.
 
 ## Service Management
 
-### sporttia-hub (Docker)
+### sporttia-hub-pro (Docker)
 
 ```bash
-# PRE environment
-docker compose -f docker-compose.pre.yml ps
-docker compose -f docker-compose.pre.yml logs -f
-docker compose -f docker-compose.pre.yml restart
+# On sporttia-hub-pro
+sudo docker compose -f docker-compose.pro.yml ps
+sudo docker compose -f docker-compose.pro.yml logs -f
+sudo docker compose -f docker-compose.pro.yml restart
+```
 
-# PRO environment
-docker compose -f docker-compose.pro.yml ps
-docker compose -f docker-compose.pro.yml logs -f
-docker compose -f docker-compose.pro.yml restart
+### sporttia-hub-pre (Docker)
+
+```bash
+# On sporttia-hub-pre
+sudo docker-compose -f docker-compose.pre.yml ps
+sudo docker-compose -f docker-compose.pre.yml logs -f
+sudo docker-compose -f docker-compose.pre.yml restart
 ```
 
 ### sporttia-proxy (nginx)
@@ -290,8 +325,8 @@ sudo systemctl reload nginx
 
 ### Log Locations
 
-- PRO logs: `docker compose -f docker-compose.pro.yml logs`
-- PRE logs: `docker compose -f docker-compose.pre.yml logs`
+- PRO logs (on sporttia-hub-pro): `sudo docker compose -f docker-compose.pro.yml logs`
+- PRE logs (on sporttia-hub-pre): `sudo docker-compose -f docker-compose.pre.yml logs`
 - Nginx (proxy): `/var/log/nginx/access.log`
 
 ## Security Considerations
@@ -306,18 +341,24 @@ sudo systemctl reload nginx
 Docker images are tagged. To rollback:
 
 ```bash
-# On sporttia-hub
-cd ~/sporttia-zero
+# On sporttia-hub-pro (for PRO rollback)
+cd ~/Projects/sporttia-zero
 git checkout <previous-commit>
-docker compose -f docker-compose.pro.yml build
-docker compose -f docker-compose.pro.yml up -d
+sudo docker compose -f docker-compose.pro.yml build
+sudo docker compose -f docker-compose.pro.yml up -d
+
+# On sporttia-hub-pre (for PRE rollback)
+cd ~/Projects/sporttia-zero
+git checkout <previous-commit>
+sudo docker-compose -f docker-compose.pre.yml build
+sudo docker-compose -f docker-compose.pre.yml up -d
 ```
 
 ---
 
 ## Ulpius Deployment (Docker)
 
-A **DEVELOPMENT** deployment using Docker on the `ulpius` instance. This environment connects to `sporttia-hub-pre` database and uses pre-production Sporttia APIs. The UI shows a blue "DEVELOPMENT ENVIRONMENT" banner.
+A **DEVELOPMENT** deployment using Docker on the `ulpius` instance. This environment connects to `sporttia-db-hub-pre` database and uses pre-production Sporttia APIs. The UI shows a blue "DEVELOPMENT ENVIRONMENT" banner.
 
 ### Infrastructure
 
@@ -326,7 +367,7 @@ A **DEVELOPMENT** deployment using Docker on the `ulpius` instance. This environ
 - **External IP:** 104.155.115.229
 - **Project directory:** `~/Projects/sporttia-zero`
 
-**Database:** `sporttia-hub-pre` (PostgreSQL 17)
+**Database:** `sporttia-db-hub-pre` (PostgreSQL 17)
 - **Private IP:** 10.63.50.7
 - **Database:** sporttia_zero
 
