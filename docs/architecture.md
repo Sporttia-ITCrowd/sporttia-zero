@@ -2476,9 +2476,9 @@ NODE_ENV=development
 PORT=3001
 
 # Database (PostgreSQL) - Cloud SQL sporttia-db-hub-pre/sporttia-db-hub-pro
-# PRE: postgresql://sporttia:PASSWORD@10.63.50.7:5432/sporttia_zero?sslmode=require
-# PRO: postgresql://sporttia:PASSWORD@10.63.50.5:5432/sporttia_zero?sslmode=require
-DATABASE_URL=postgresql://sporttia:PASSWORD@10.63.50.7:5432/sporttia_zero?sslmode=require
+# PRE: postgresql://sporttia:PASSWORD@10.63.50.15:5432/sporttia_zero?sslmode=require
+# PRO: postgresql://sporttia:PASSWORD@10.63.50.14:5432/sporttia_zero?sslmode=require
+DATABASE_URL=postgresql://sporttia:PASSWORD@10.63.50.15:5432/sporttia_zero?sslmode=require
 
 # OpenAI
 OPENAI_API_KEY=sk-...

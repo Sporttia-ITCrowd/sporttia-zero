@@ -368,7 +368,7 @@ A **DEVELOPMENT** deployment using Docker on the `ulpius` instance. This environ
 - **Project directory:** `~/Projects/sporttia-zero`
 
 **Database:** `sporttia-db-hub-pre` (PostgreSQL 17)
-- **Private IP:** 10.63.50.7
+- **Private IP:** 10.63.50.15
 - **Database:** sporttia_zero
 
 **Sporttia APIs:** PRE-PRODUCTION
