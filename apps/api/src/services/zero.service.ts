@@ -8,6 +8,7 @@
  * - 3-month subscription with ACTIVE status
  * - 3 monthly licences with PAID status and FREE payment form
  * - Admin group with SC_ADMIN type and privileges 11, 12, 13, 24, 26, 28
+ * - Default group with DEFAULT type and user-facing privileges 1, 2, 4, 6, 9, 13, 23, 24, 26, 27, 28
  * - Admin user with SPORTCENTER role
  * - User-group association
  * - User purse
@@ -35,6 +36,7 @@ const SPORTCENTER_STATUS = {
 
 const GROUP_TYPES = {
   SC_ADMIN: 'SC_ADMIN',
+  DEFAULT: 'DEFAULT',
 };
 
 const GROUP_STATUS = {
@@ -201,6 +203,35 @@ async function createAdminGroup(conn: PoolConnection, sportcenterId: number): Pr
   } catch {
     // Table might not exist or have different structure
     logger.debug({ groupId }, 'groups_privilege insert skipped');
+  }
+
+  return groupId;
+}
+
+/**
+ * Create default group with user-facing privileges
+ */
+async function createDefaultGroup(conn: PoolConnection, sportcenterId: number): Promise<number> {
+  const [groupResult] = await conn.execute<ResultSetHeader>(
+    'INSERT INTO `groups` (sportcenter_id, type, status) VALUES (?, ?, ?)',
+    [sportcenterId, GROUP_TYPES.DEFAULT, GROUP_STATUS.ACTIVE]
+  );
+  const groupId = groupResult.insertId;
+
+  // Add user-facing privileges matching standard Sporttia sports centers:
+  // 1=Create matches, 2=Join matches, 4=Pay at center, 6=Book pending payment,
+  // 9=Cancel booking, 13=Book, 23=Multiple registration,
+  // 24=Class registration pending, 26=Book with wallet, 27=Book with POS, 28=Delete payment
+  try {
+    const privilegeIds = [1, 2, 4, 6, 9, 13, 23, 24, 26, 27, 28];
+    for (const privilegeId of privilegeIds) {
+      await conn.execute(
+        'INSERT INTO groups_privilege (groups_id, privilege_id) VALUES (?, ?)',
+        [groupId, privilegeId]
+      );
+    }
+  } catch {
+    logger.debug({ groupId }, 'groups_privilege insert skipped for default group');
   }
 
   return groupId;
@@ -502,6 +533,10 @@ export async function createSportsCenter(
     // 7. Create admin group
     const groupId = await createAdminGroup(conn, sportcenterId);
     logger.debug({ groupId }, 'Admin group created');
+
+    // 7b. Create default group with user-facing privileges
+    const defaultGroupId = await createDefaultGroup(conn, sportcenterId);
+    logger.debug({ defaultGroupId }, 'Default group created');
 
     // 8. Generate admin credentials (login from sportcenter name)
     const adminLogin = generateLoginByName(request.sportcenter.name);
